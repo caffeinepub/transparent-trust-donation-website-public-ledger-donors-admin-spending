@@ -1,0 +1,133 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "Build a transparent, globally accessible trust donation website to collect funds indefinitely and publicly show total funds, all transactions, usage of funds, and donor/member contribution details.",
+  "architectural_notes": [],
+  "known_issues": [],
+  "isFixRequest": false,
+  "imageRequirements": "## Required Images\n- Minimal modern charity trust logo mark, flat vector style, transparent background (trust-logo.dim_512x512.png)\n- Warm, inclusive hero illustration showing community support/charity concept, flat illustration, no text, wide banner (trust-hero.dim_1600x600.png)",
+  "existing_features": [
+    {
+      "id": "feature-add-admin-authorization-to-restrict-who-can-create-edit-outgoing-spending-usage-records-and-if-applicable-manage-donor-records-admin-access-must-be-based-on-internet-identity-principal-allowlisting-stored-in-canister-state",
+      "title": "Add admin authorization to restrict who can create/edit outgoing spending/usage records and (if applicable) manage donor records; admin access must be based on Internet Identity principal allowlisting stored in canister state.",
+      "reqIds": [
+        "REQ-2"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-public-transparency-dashboard-ui-that-shows-total-funds-current-balance-totals-in-out-recent-transactions-and-breakdown-of-outgoing-spending-by-category-purpose",
+      "title": "Create a public Transparency Dashboard UI that shows: total funds (current balance), totals in/out, recent transactions, and breakdown of outgoing spending by category/purpose.",
+      "reqIds": [
+        "REQ-3"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-public-transaction-ledger-ui-that-lists-all-incoming-and-outgoing-transactions-with-filtering-incoming-outgoing-category-and-sorting-newest-oldest-and-supports-viewing-a-transaction-s-full-details",
+      "title": "Create a public Transaction Ledger UI that lists all incoming and outgoing transactions with filtering (incoming/outgoing/category) and sorting (newest/oldest), and supports viewing a transaction’s full details.",
+      "reqIds": [
+        "REQ-4"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-create-a-public-donor-member-listing-ui-that-shows-each-contributor-s-details-and-contribution-totals-with-a-donor-detail-view-showing-the-donor-s-contribution-history",
+      "title": "Create a public Donor/Member Listing UI that shows each contributor’s details and contribution totals, with a donor detail view showing the donor’s contribution history.",
+      "reqIds": [
+        "REQ-5"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-donation-flow-that-allows-supporters-worldwide-to-contribute-and-have-the-contribution-recorded-on-the-public-ledger-including-a-donor-identity-option-signed-in-via-internet-identity-and-an-anonymous-option",
+      "title": "Add a Donation flow that allows supporters worldwide to contribute and have the contribution recorded on the public ledger, including a donor identity option (signed-in via Internet Identity) and an anonymous option.",
+      "reqIds": [
+        "REQ-6"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-an-admin-management-ui-for-authorized-admins-to-create-outgoing-spending-usage-records-purpose-category-amount-description-date-time-optional-attachment-reference-text-and-optionally-correct-mistakes-via-a-clear-audit-friendly-approach",
+      "title": "Add an Admin Management UI for authorized admins to create outgoing spending/usage records (purpose/category, amount, description, date/time, optional attachment/reference text) and (optionally) correct mistakes via a clear audit-friendly approach.",
+      "reqIds": [
+        "REQ-7"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-website-is-designed-and-implemented-to-operate-indefinitely-no-built-in-expiration-time-period-logic-and-is-publicly-accessible-without-requiring-login-for-viewing-transparency-information",
+      "title": "Ensure the website is designed and implemented to operate indefinitely (no built-in expiration/time period logic) and is publicly accessible without requiring login for viewing transparency information.",
+      "reqIds": [
+        "REQ-8"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-apply-a-coherent-distinctive-visual-theme-across-the-site-colors-typography-spacing-component-styling-suitable-for-a-global-charitable-trust-transparency-platform-avoiding-default-looking-template-styling",
+      "title": "Apply a coherent, distinctive visual theme across the site (colors, typography, spacing, component styling) suitable for a global charitable trust transparency platform, avoiding default-looking template styling.",
+      "reqIds": [
+        "REQ-9"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-generate-and-include-required-static-images-logo-and-a-simple-hero-illustration-and-render-them-as-static-assets-from-frontend-public-assets-generated-not-served-via-the-backend",
+      "title": "Generate and include required static images (logo and a simple hero illustration) and render them as static assets from frontend/public/assets/generated (not served via the backend).",
+      "reqIds": [
+        "REQ-10"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Donation collection on the website for the trust (accept funds from supporters online).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-2",
+      "summary": "Public transparency dashboard showing total funds available and how funds are used.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-3",
+      "summary": "Public transaction ledger displaying all incoming/outgoing transactions and amounts.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-4",
+      "summary": "Public donor/member listing showing details of each contributor and their contributions.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-5",
+      "summary": "Global access support (website intended to be accessible worldwide).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-6",
+      "summary": "Operate without an end date/time period (site intended to run indefinitely).",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-7",
+      "summary": "Implement persistent backend data models and APIs for a transparent trust ledger that stores: (a) donor profiles (at minimum: display name, optional contact fields, principal if signed in), (b) incoming donations, (c) outgoing spending/usage records, and (d) a computed trust balance derived from all records.",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "status": "pending"
+    }
+  ],
+  "gameProjectType": "none",
+  "projectName": "Transparent Trust Donation Website (Public Ledger, Donors, Admin Spending)",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}

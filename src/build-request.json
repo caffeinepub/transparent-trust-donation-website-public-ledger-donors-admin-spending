@@ -1,0 +1,212 @@
+{
+  "kind": "build_request",
+  "title": "Transparent Trust Donation Website (Public Ledger, Donors, Admin Spending)",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Implement persistent backend data models and APIs for a transparent trust ledger that stores: (a) donor profiles (at minimum: display name, optional contact fields, principal if signed in), (b) incoming donations, (c) outgoing spending/usage records, and (d) a computed trust balance derived from all records.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "It should show all the transactions amount to the people , that how much amount does my trust have and in what ways the amont is used and the details of each of the member who gave their funds to my trust ."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend can create and list donors.",
+        "Backend can create and list incoming donation transactions with amount, timestamp, and an optional note/reference.",
+        "Backend can create and list outgoing spending transactions with amount, timestamp, category/purpose, and a description.",
+        "Backend exposes a query method that returns the current trust balance computed from all incoming minus outgoing transactions.",
+        "All ledger data persists across canister upgrades using stable storage patterns (no data loss on upgrade)."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Add admin authorization to restrict who can create/edit outgoing spending/usage records and (if applicable) manage donor records; admin access must be based on Internet Identity principal allowlisting stored in canister state.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "spend it a useful manner . It should be useful for the poor people , orphan children etc."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Only allowlisted admin principals can create outgoing spending transactions.",
+        "Non-admin users can view public data but cannot create outgoing spending records.",
+        "There is a safe initial admin setup mechanism (e.g., first-run initialization or a controlled method callable only when no admins exist).",
+        "Unauthorized calls return clear errors and do not modify state."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Create a public Transparency Dashboard UI that shows: total funds (current balance), totals in/out, recent transactions, and breakdown of outgoing spending by category/purpose.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "It should show all the transactions amount to the people , that how much amount does my trust have and in what ways the amont is used"
+        ]
+      },
+      "acceptanceCriteria": [
+        "A public page displays current balance, total incoming, and total outgoing.",
+        "A public section shows a spending breakdown grouped by category/purpose.",
+        "Recent transactions list is visible without sign-in.",
+        "UI handles empty-state gracefully (e.g., no transactions yet)."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Create a public Transaction Ledger UI that lists all incoming and outgoing transactions with filtering (incoming/outgoing/category) and sorting (newest/oldest), and supports viewing a transaction’s full details.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "It should show all the transactions amount to the people"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Users can view a unified ledger of all transactions.",
+        "Users can filter by transaction type (incoming vs outgoing).",
+        "Users can filter outgoing transactions by category/purpose.",
+        "Users can open a transaction detail view showing all stored fields (amount, timestamp, description/note, reference)."
+      ]
+    },
+    {
+      "id": "REQ-5",
+      "text": "Create a public Donor/Member Listing UI that shows each contributor’s details and contribution totals, with a donor detail view showing the donor’s contribution history.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "the details of each of the member who gave their funds to my trust"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Public donors list loads from the backend and displays donors with their total contributed amount.",
+        "Donor detail view shows the donor’s incoming donation transactions.",
+        "Sensitive fields (if collected) can be omitted from public view; only explicitly public fields are displayed.",
+        "UI supports donors with no name by showing a safe fallback label (e.g., 'Anonymous')."
+      ]
+    },
+    {
+      "id": "REQ-6",
+      "text": "Add a Donation flow that allows supporters worldwide to contribute and have the contribution recorded on the public ledger, including a donor identity option (signed-in via Internet Identity) and an anonymous option.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "collect money from the pople",
+          "My wish is to spread my website all over the world and collect more fund from the pople ."
+        ]
+      },
+      "acceptanceCriteria": [
+        "Supporters can submit a donation record with amount and optional note.",
+        "If signed in, the donation is associated with the user’s principal and can appear under their donor profile.",
+        "If not signed in, the donation can be recorded as anonymous (no principal required).",
+        "Donation submissions appear in the public ledger after successful submission.",
+        "UI validates amount input and prevents negative/invalid values."
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "text": "Add an Admin Management UI for authorized admins to create outgoing spending/usage records (purpose/category, amount, description, date/time, optional attachment/reference text) and (optionally) correct mistakes via a clear audit-friendly approach.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "spend it a useful manner"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Admin-only page is not accessible to non-admin users (guarded in UI and enforced by backend).",
+        "Admin can create an outgoing spending record and see it immediately in the public dashboard/ledger.",
+        "Spending creation form includes category/purpose, amount, and description as required fields.",
+        "System prevents spending that would make computed balance negative (or clearly blocks with an error)."
+      ]
+    },
+    {
+      "id": "REQ-8",
+      "text": "Ensure the website is designed and implemented to operate indefinitely (no built-in expiration/time period logic) and is publicly accessible without requiring login for viewing transparency information.",
+      "target": "both",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ],
+        "quotes": [
+          "This website should not have any time period ."
+        ]
+      },
+      "acceptanceCriteria": [
+        "No UI or backend logic disables the app after a date/time.",
+        "All transparency pages (dashboard, ledger, donors list) are accessible without authentication.",
+        "Authentication is only required for admin actions and (optionally) to link a donation to a specific user identity."
+      ]
+    },
+    {
+      "id": "REQ-9",
+      "text": "Apply a coherent, distinctive visual theme across the site (colors, typography, spacing, component styling) suitable for a global charitable trust transparency platform, avoiding default-looking template styling.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "All main pages share a consistent layout system (header/nav, content width, typography scale).",
+        "Theme is consistent across buttons, tables/lists, forms, and cards.",
+        "Design uses a clear, readable palette (not blue+purple by default) and meets basic accessibility for contrast and readability."
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "text": "Generate and include required static images (logo and a simple hero illustration) and render them as static assets from frontend/public/assets/generated (not served via the backend).",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-1"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Generated images exist under frontend/public/assets/generated and are referenced by the UI.",
+        "Header uses the generated logo asset.",
+        "Homepage/dashboard includes the hero illustration asset in a visually coherent way.",
+        "Build runs without missing-asset errors."
+      ]
+    }
+  ],
+  "constraints": [
+    "Backend must remain a single Motoko actor with all logic in the main backend file (no multi-canister backend architecture).",
+    "Do not edit files under frontend/src/components/ui; compose them instead.",
+    "Do not edit immutable hook/bootstrapping paths listed by the system (e.g., Internet Identity hooks and main entry); integrate via new components/pages and existing public APIs.",
+    "No third-party authentication providers; only Internet Identity for sign-in.",
+    "No external databases or non-IC backend services."
+  ],
+  "nonGoals": [
+    "Integrating non-IC crypto wallets such as MetaMask/WalletConnect.",
+    "Real-time chat, push notifications, email/SMS messaging.",
+    "Complex multi-organization workflows (multiple trusts) unless explicitly requested.",
+    "Automated KYC/identity verification beyond Internet Identity principal-based sign-in."
+  ],
+  "imageRequirements": {
+    "required": [
+      "Minimal modern charity trust logo mark, flat vector style, transparent background (trust-logo.dim_512x512.png)",
+      "Warm, inclusive hero illustration showing community support/charity concept, flat illustration, no text, wide banner (trust-hero.dim_1600x600.png)"
+    ],
+    "edits": []
+  }
+}

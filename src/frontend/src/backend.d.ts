@@ -1,0 +1,79 @@
+import type { Principal } from "@icp-sdk/core/principal";
+export interface Some<T> {
+    __kind__: "Some";
+    value: T;
+}
+export interface None {
+    __kind__: "None";
+}
+export type Option<T> = Some<T> | None;
+export interface DonationInput {
+    displayName: string;
+    donorId: string;
+    description: string;
+    email?: string;
+    phone?: string;
+    amount: bigint;
+}
+export type Time = bigint;
+export interface Record_ {
+    id: string;
+    description: string;
+    timestamp: Time;
+    amount: bigint;
+}
+export interface Record__1 {
+    id: string;
+    status: Status;
+    donorId: string;
+    description: string;
+    timestamp: Time;
+    amount: bigint;
+}
+export interface Profile {
+    id: string;
+    principal?: Principal;
+    displayName: string;
+    joinedTimestamp: Time;
+    email?: string;
+    phone?: string;
+    totalDonated: bigint;
+}
+export interface UserProfile {
+    name: string;
+    email?: string;
+    phone?: string;
+}
+export enum Status {
+    pending = "pending",
+    confirmed = "confirmed",
+    failed = "failed"
+}
+export enum UserRole {
+    admin = "admin",
+    user = "user",
+    guest = "guest"
+}
+export interface backendInterface {
+    addDonation(donationInput: DonationInput): Promise<string>;
+    addSpendingRecord(amount: bigint, description: string): Promise<string>;
+    assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    confirmDonation(donationId: string): Promise<void>;
+    declineDonation(donationId: string): Promise<void>;
+    deleteSpendingRecord(id: string): Promise<void>;
+    getCallerUserProfile(): Promise<UserProfile | null>;
+    getCallerUserRole(): Promise<UserRole>;
+    getDonations(limit: bigint, offset: bigint): Promise<Array<Record__1>>;
+    getDonorDonations(donorId: string): Promise<Array<Record__1>>;
+    getDonorProfile(donorId: string): Promise<Profile | null>;
+    getDonorProfiles(): Promise<Array<Profile>>;
+    getSpendingRecords(limit: bigint, offset: bigint): Promise<Array<Record_>>;
+    getTotalDonations(): Promise<bigint>;
+    getTotalSpending(): Promise<bigint>;
+    getTrustBalance(): Promise<bigint>;
+    getUserProfile(user: Principal): Promise<UserProfile | null>;
+    isCallerAdmin(): Promise<boolean>;
+    saveCallerUserProfile(profile: UserProfile): Promise<void>;
+    updateDonorProfileAdmin(donorId: string, displayName: string, email: string | null, phone: string | null): Promise<void>;
+    updateSpendingRecord(id: string, amount: bigint, description: string): Promise<void>;
+}

@@ -1,0 +1,140 @@
+{
+  "kind": "spec_vs_diff_report",
+  "version": "1.0",
+  "generatedAt": "2026-02-10T23:46:52.754Z",
+  "summary": "Diff adds a Motoko backend actor with donor/donation/spending types plus a TanStack Router-based frontend with dashboard/ledger/donors/donate/admin routes and several UI components (guards, forms, tables). However, several BuildRequest requirements are not verifiably implemented from the provided diff summary (notably stable upgrade persistence, spending category/purpose fields + category filtering, and required static images being present). The diff also introduces some unrequested behaviors (secret-token-based access-control initialization and Caffeine.ai footer attribution).",
+  "missing_requirements": [
+    {
+      "id": "REQ-1",
+      "requirement": "All ledger data persists across canister upgrades using stable storage patterns (no data loss on upgrade).",
+      "reason": "The added backend/main.mo (truncated) shows in-memory vars (List/Map/next ids) but no stable variables, preupgrade/postupgrade hooks, or explicit stable serialization are visible in the diff summary.",
+      "evidence": [
+        "backend/main.mo (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-1",
+      "requirement": "Outgoing spending transactions include amount, timestamp, category/purpose, and a description.",
+      "reason": "Spending.Record in the backend snippet contains only id, amount, timestamp, description; no category/purpose field is shown.",
+      "evidence": [
+        "backend/main.mo (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "requirement": "Admin access must be based on Internet Identity principal allowlisting stored in canister state, with a safe initial admin setup mechanism.",
+      "reason": "Backend shows imported authorization modules and admin checks, but the diff summary does not show any explicit allowlist storage APIs or a first-run/only-when-empty admin bootstrap method. Frontend calls an initialization method with a secret token, which is not the requested allowlist setup mechanism.",
+      "evidence": [
+        "backend/main.mo (truncated)",
+        "frontend/src/hooks/useActor.ts"
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "requirement": "Transparency Dashboard shows total funds (current balance), totals in/out, recent transactions, and breakdown of outgoing spending by category/purpose.",
+      "reason": "Components exist for recent transactions and a spending breakdown, but the actual DashboardPage implementation is not shown in the diff summary (added files omitted/truncated), so the presence of balance/totals sections and correct category/purpose grouping cannot be verified.",
+      "evidence": [
+        "frontend/src/App.tsx",
+        "frontend/src/components/ledger/RecentTransactionsList.tsx (truncated)",
+        "frontend/src/components/ledger/SpendingBreakdownCard.tsx"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "Ledger supports filtering by outgoing category/purpose.",
+      "reason": "LedgerFilters only supports transaction type and sort order; no category/purpose filter control is shown.",
+      "evidence": [
+        "frontend/src/components/ledger/LedgerFilters.tsx"
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "requirement": "Transaction detail view shows all stored fields (amount, timestamp, description/note, reference).",
+      "reason": "A TransactionDetailPage route exists but its implementation is not included in the diff summary, so the required full-detail display cannot be verified. Also the backend donation/spending records shown do not include a distinct note/reference field beyond description.",
+      "evidence": [
+        "frontend/src/App.tsx",
+        "backend/main.mo (truncated)"
+      ]
+    },
+    {
+      "id": "REQ-7",
+      "requirement": "Admin spending creation form includes category/purpose, amount, description, date/time, and optional attachment/reference text.",
+      "reason": "SpendingForm includes only amount and description; no category/purpose, date/time input, or attachment/reference text field is shown.",
+      "evidence": [
+        "frontend/src/components/admin/SpendingForm.tsx"
+      ]
+    },
+    {
+      "id": "REQ-10",
+      "requirement": "Generated images exist under frontend/public/assets/generated (logo + hero) and are referenced by the UI.",
+      "reason": "UI references the logo path, but the diff summary does not show the generated image files added under frontend/public/assets/generated, nor any hero illustration usage (no evidence of trust-hero.dim_1600x600.png being referenced).",
+      "evidence": [
+        "frontend/src/components/layout/SiteHeader.tsx (truncated)"
+      ]
+    }
+  ],
+  "hallucinated_features": [
+    {
+      "description": "Secret-token-based access-control initialization via URL parameter (caffeineAdminToken) calling actor._initializeAccessControlWithSecret().",
+      "reason": "BuildRequest specifies admin authorization based on Internet Identity principal allowlisting stored in canister state, with safe initial admin setup; it does not request a secret-token bootstrap passed via URL params.",
+      "evidence": [
+        "frontend/src/hooks/useActor.ts"
+      ]
+    },
+    {
+      "description": "Caffeine.ai referral/attribution link in the site footer.",
+      "reason": "BuildRequest does not request adding external promotional/attribution links.",
+      "evidence": [
+        "frontend/src/components/layout/SiteFooter.tsx"
+      ]
+    },
+    {
+      "description": "Donation status workflow (#pending/#confirmed/#failed) and an admin-only confirmDonation flow.",
+      "reason": "BuildRequest requires recording donations and listing them publicly; it does not request a pending/confirmation state machine or an admin donation confirmation UI/flow.",
+      "evidence": [
+        "backend/main.mo (truncated)",
+        "frontend/src/App.tsx (AdminDonationsPage route)"
+      ]
+    }
+  ],
+  "confidence": 0.66,
+  "changed_files": [
+    "all_files_summary.json",
+    "backend/main.mo",
+    "frontend-file-summaries.txt",
+    "frontend/index.css",
+    "frontend/index.html",
+    "frontend/src/App.tsx",
+    "frontend/src/components/admin/SpendingForm.tsx",
+    "frontend/src/components/auth/AdminGuard.tsx",
+    "frontend/src/components/auth/LoginButton.tsx",
+    "frontend/src/components/auth/ProfileSetupModal.tsx",
+    "frontend/src/components/donate/DonationForm.tsx",
+    "frontend/src/components/donors/DonorsTable.tsx",
+    "frontend/src/components/feedback/AccessDeniedScreen.tsx",
+    "frontend/src/components/layout/SiteFooter.tsx",
+    "frontend/src/components/layout/SiteHeader.tsx",
+    "frontend/src/components/layout/SiteLayout.tsx",
+    "frontend/src/components/ledger/LedgerFilters.tsx",
+    "frontend/src/components/ledger/LedgerTable.tsx",
+    "frontend/src/components/ledger/RecentTransactionsList.tsx",
+    "frontend/src/components/ledger/SpendingBreakdownCard.tsx",
+    "frontend/src/hooks/useActor.ts",
+    "frontend/src/hooks/useAdminStatus.ts",
+    "frontend/src/hooks/useInternetIdentity.ts",
+    "frontend/src/hooks/useQueries.ts",
+    "frontend/src/index.css",
+    "frontend/src/main.tsx",
+    "frontend/src/pages/DashboardPage.tsx",
+    "frontend/src/pages/DonatePage.tsx",
+    "frontend/src/pages/DonorDetailPage.tsx",
+    "frontend/src/pages/DonorsPage.tsx",
+    "frontend/src/pages/LedgerPage.tsx",
+    "frontend/src/pages/TransactionDetailPage.tsx",
+    "frontend/src/pages/admin/AdminDonationsPage.tsx",
+    "frontend/src/pages/admin/AdminSpendingPage.tsx",
+    "frontend/src/utils/urlParams.ts",
+    "frontend/tailwind.config.js",
+    "project_state.json"
+  ]
+}
