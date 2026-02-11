@@ -1,59 +1,44 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T01:22:16.438Z",
-  "summary": "Diff adds a shared approved image constant and replaces some UI images with it; adds frontend phone masking utility and updates donor pages to use admin vs public donor profiles. Backend introduces donor PublicProfile type with maskedPhone and wires in a migration module, but the diff summary is truncated before showing the actual donor-profile read API implementations, so it’s not fully verifiable that backend masking is enforced across all relevant endpoints.",
+  "generatedAt": "2026-02-11T14:23:54.149Z",
+  "summary": "BuildRequest REQ-59 asked only to replace the existing static UPI QR image file at a fixed path, with no code/config changes. The diff summary shows no modification of the QR asset file and instead updates project metadata/summaries describing many unrelated frontend changes.",
   "missing_requirements": [
     {
-      "id": "REQ-17",
-      "requirement": "Enforce donor phone-number privacy at the backend API level: non-admin callers receive masked phone numbers; admins receive full phone numbers.",
-      "reason": "backend/main.mo shows new Donor.PublicProfile with maskedPhone, but the diff excerpt is truncated before any donor-profile read API functions (e.g., list/get donor profiles) and before any demonstrated masking logic or admin-conditional return behavior. Therefore it’s not verifiable from the provided diff summary that the backend actually masks phone numbers for non-admin callers.",
+      "id": "REQ-59",
+      "requirement": "Replace the static UPI QR asset at `frontend/public/assets/generated/upi-qr.dim_800x800.jpg` with the newly uploaded QR image while keeping the code/path unchanged (`/assets/generated/upi-qr.dim_800x800.jpg`).",
+      "reason": "The diff summary does not show any change to `frontend/public/assets/generated/upi-qr.dim_800x800.jpg` (only two non-asset files were modified). There is also no evidence in the provided diff summary that the QR image replacement occurred or that the build will include the updated asset.",
       "evidence": [
-        "backend/main.mo (truncated; only type additions shown, not API implementations)"
-      ]
-    },
-    {
-      "id": "REQ-18",
-      "requirement": "Update all frontend donor views so non-admins never see an unmasked phone number (tables/detail/loading states), while admins can see full numbers.",
-      "reason": "DonorDetailPage.tsx is updated to select admin vs public profile and display maskedPhone for non-admins, but the donor list/table rendering is delegated to DonorsTable and that component is not shown/modified in the provided diff summary. Without changes/evidence in DonorsTable (and any other donor views), it’s not verifiable that no UI path can render an unmasked phone number for non-admin users.",
-      "evidence": [
-        "frontend/src/pages/DonorsPage.tsx (uses DonorsTable)",
-        "frontend/src/pages/DonorDetailPage.tsx (masked display logic present)"
-      ]
-    },
-    {
-      "id": "REQ-19",
-      "requirement": "Ensure the site uses ONLY the single user-uploaded donations photo asset across the UI; remove/replace any other generated/placeholder image references.",
-      "reason": "DashboardPage and SiteHeader now use APPROVED_IMAGE_PATH, but the diff summary does not show updates/removals for all other pages/components that might reference other images (e.g., any remaining references to \"/assets/generated/trust-hero.dim_1600x600.png\" or other assets). Therefore it’s not verifiable that the entire app uses only the single approved image wherever an image is rendered.",
-      "evidence": [
-        "frontend/src/pages/DashboardPage.tsx (uses APPROVED_IMAGE_PATH)",
-        "frontend/src/components/layout/SiteHeader.tsx (uses APPROVED_IMAGE_PATH)",
-        "frontend-file-summaries.txt (mentions many pages/components, but does not enumerate image usage across all of them)"
+        "<file-diff>: Modified files list only includes `frontend-file-summaries.txt` and `project_state.json`; no mention of `frontend/public/assets/generated/upi-qr.dim_800x800.jpg`."
       ]
     }
   ],
   "hallucinated_features": [
     {
-      "description": "Introduced and wired a backend migration module even though no persistent state schema change is evidenced in the diff summary.",
-      "reason": "BuildRequest says to add backend/migration.mo only if persistent state schema changes are required. The diff adds backend/migration.mo and imports/uses it in backend/main.mo, but the provided excerpt doesn’t show a stable-state schema migration need (the added code shown is a no-op migration).",
+      "description": "Unrelated frontend route/layout/admin-portal changes (TanStack Router route trees, AdminLayout/Admin routes, AdminGuard, access denied screen, etc.).",
+      "reason": "Not requested by REQ-59, which explicitly scoped the change to replacing a static QR image asset and avoiding donation flow/backend/config changes.",
       "evidence": [
-        "backend/migration.mo",
-        "backend/main.mo (imports Migration and uses '(with migration = Migration.run)')"
+        "frontend-file-summaries.txt (truncated): entries for `frontend/src/App.tsx`, `frontend/src/components/auth/AdminGuard.tsx`, `frontend/src/components/feedback/AccessDeniedScreen.tsx`, and multiple admin-related pages/routes."
+      ]
+    },
+    {
+      "description": "Unrelated changes to donation page content and other public pages (dashboard, ledger, donors, donor detail, transaction detail) and React Query hooks behavior.",
+      "reason": "Not requested by REQ-59; these are functional/UI changes beyond replacing an image asset.",
+      "evidence": [
+        "frontend-file-summaries.txt (truncated): entries for `frontend/src/pages/DonatePage.tsx`, `frontend/src/pages/DashboardPage.tsx`, `frontend/src/pages/LedgerPage.tsx`, `frontend/src/pages/DonorsPage.tsx`, `frontend/src/pages/DonorDetailPage.tsx`, `frontend/src/pages/TransactionDetailPage.tsx`, `frontend/src/hooks/useQueries.ts`, `frontend/src/hooks/useAdminStatus.ts`."
+      ]
+    },
+    {
+      "description": "Project metadata/state update unrelated to QR asset replacement (project_state.json version/summary/features list).",
+      "reason": "REQ-59 did not request any project state/schema/feature registry changes.",
+      "evidence": [
+        "project_state.json (truncated): `projectStateVersion`: 43 and large `existing_features` list shown/updated."
       ]
     }
   ],
-  "confidence": 0.62,
+  "confidence": 0.72,
   "changed_files": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/layout/SiteHeader.tsx",
-    "frontend/src/hooks/useQueries.ts",
-    "frontend/src/pages/DashboardPage.tsx",
-    "frontend/src/pages/DonorDetailPage.tsx",
-    "frontend/src/pages/DonorsPage.tsx",
-    "frontend/src/utils/approvedImage.ts",
-    "frontend/src/utils/phoneMask.ts",
     "project_state.json"
   ]
 }

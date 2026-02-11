@@ -1,48 +1,28 @@
-import { useParams, useNavigate } from '@tanstack/react-router';
+import { useParams, Link } from '@tanstack/react-router';
 import { useGetDonations, useGetSpendingRecords } from '@/hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, Calendar, DollarSign, FileText, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-
-type DonationRecord = {
-  id: string;
-  donorId: string;
-  amount: bigint;
-  timestamp: bigint;
-  description: string;
-  status: string;
-};
-
-type SpendingRecord = {
-  id: string;
-  amount: bigint;
-  timestamp: bigint;
-  description: string;
-};
+import { ArrowLeft, TrendingUp, TrendingDown } from 'lucide-react';
+import { formatINR } from '@/utils/formatCurrency';
+import { maskUtr } from '@/utils/maskUtr';
 
 export default function TransactionDetailPage() {
   const { id } = useParams({ from: '/transaction/$id' });
-  const navigate = useNavigate();
-  
   const { data: donations = [], isLoading: donationsLoading } = useGetDonations(1000, 0);
   const { data: spending = [], isLoading: spendingLoading } = useGetSpendingRecords(1000, 0);
 
   const isLoading = donationsLoading || spendingLoading;
 
+  // Find the transaction
   const donation = donations.find(d => d.id === id);
   const spendingRecord = spending.find(s => s.id === id);
   const transaction = donation || spendingRecord;
-  const isDonation = !!donation;
-
-  const formatCurrency = (amount: bigint) => {
-    return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
 
   const formatDate = (timestamp: bigint) => {
     const date = new Date(Number(timestamp) / 1000000);
-    return date.toLocaleString('en-US', {
+    return date.toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -63,8 +43,7 @@ export default function TransactionDetailPage() {
   if (isLoading) {
     return (
       <div className="container py-12">
-        <Skeleton className="h-8 w-48 mb-8" />
-        <Skeleton className="h-96 w-full" />
+        <Skeleton className="h-96 w-full max-w-2xl mx-auto" />
       </div>
     );
   }
@@ -72,88 +51,112 @@ export default function TransactionDetailPage() {
   if (!transaction) {
     return (
       <div className="container py-12">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Transaction Not Found</h1>
-          <Button onClick={() => navigate({ to: '/ledger' })}>
-            <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Ledger
-          </Button>
-        </div>
+        <Card className="max-w-2xl mx-auto">
+          <CardContent className="py-12 text-center">
+            <p className="text-muted-foreground mb-4">Transaction not found</p>
+            <Link to="/ledger">
+              <Button variant="outline">
+                <ArrowLeft className="mr-2 h-4 w-4" />
+                Back to Ledger
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
       </div>
     );
   }
 
+  const isDonation = !!donation;
+
   return (
     <div className="container py-12">
-      <Button 
-        variant="ghost" 
-        onClick={() => navigate({ to: '/ledger' })}
-        className="mb-6"
-      >
-        <ArrowLeft className="mr-2 h-4 w-4" />
-        Back to Ledger
-      </Button>
+      <div className="max-w-2xl mx-auto">
+        <Link to="/ledger">
+          <Button variant="ghost" className="mb-6">
+            <ArrowLeft className="mr-2 h-4 w-4" />
+            Back to Ledger
+          </Button>
+        </Link>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-start justify-between">
-            <div>
-              <CardTitle className="text-2xl mb-2">
-                {isDonation ? 'Donation' : 'Spending'} Details
-              </CardTitle>
-              <p className="text-sm text-muted-foreground">Transaction ID: {transaction.id}</p>
-            </div>
-            {isDonation && donation && (
-              getStatusBadge(donation.status)
-            )}
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <DollarSign className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Amount</p>
-                <p className="text-2xl font-bold">{formatCurrency(transaction.amount)}</p>
-              </div>
-            </div>
-
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Calendar className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Date & Time</p>
-                <p className="font-medium">{formatDate(transaction.timestamp)}</p>
-              </div>
-            </div>
-
-            {isDonation && donation && (
-              <div className="flex items-start gap-3">
-                <div className="p-2 rounded-lg bg-primary/10">
-                  <User className="h-5 w-5 text-primary" />
+        <Card>
+          <CardHeader>
+            <div className="flex items-start justify-between">
+              <div className="flex items-center gap-3">
+                <div className={`p-3 rounded-full ${isDonation ? 'bg-green-100 dark:bg-green-900/20' : 'bg-red-100 dark:bg-red-900/20'}`}>
+                  {isDonation ? (
+                    <TrendingUp className="h-6 w-6 text-green-600 dark:text-green-400" />
+                  ) : (
+                    <TrendingDown className="h-6 w-6 text-red-600 dark:text-red-400" />
+                  )}
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Donor ID</p>
-                  <p className="font-medium">{donation.donorId}</p>
+                  <CardTitle className="text-2xl">
+                    {isDonation ? 'Donation' : 'Spending'}
+                  </CardTitle>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Transaction ID: {transaction.id}
+                  </p>
                 </div>
               </div>
-            )}
-
-            <div className="flex items-start gap-3 md:col-span-2">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <FileText className="h-5 w-5 text-primary" />
-              </div>
-              <div className="flex-1">
-                <p className="text-sm text-muted-foreground">Description</p>
-                <p className="font-medium">{transaction.description || 'No description provided'}</p>
-              </div>
+              {isDonation && donation && getStatusBadge(donation.status)}
             </div>
-          </div>
-        </CardContent>
-      </Card>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="grid gap-4">
+              <div className="flex justify-between items-center py-3 border-b">
+                <span className="text-muted-foreground">Amount</span>
+                <span className="text-2xl font-bold">{formatINR(transaction.amount)}</span>
+              </div>
+
+              <div className="flex justify-between items-center py-3 border-b">
+                <span className="text-muted-foreground">Date</span>
+                <span className="font-medium">{formatDate(transaction.timestamp)}</span>
+              </div>
+
+              {transaction.description && (
+                <div className="py-3 border-b">
+                  <span className="text-muted-foreground block mb-2">Description</span>
+                  <p className="font-medium">{transaction.description}</p>
+                </div>
+              )}
+
+              {isDonation && donation && (
+                <>
+                  <div className="flex justify-between items-center py-3 border-b">
+                    <span className="text-muted-foreground">Donor ID</span>
+                    <Link to="/donor/$id" params={{ id: donation.donorId }}>
+                      <Button variant="link" className="p-0 h-auto font-mono text-xs">
+                        {donation.donorId.substring(0, 20)}...
+                      </Button>
+                    </Link>
+                  </div>
+
+                  <div className="flex justify-between items-center py-3 border-b">
+                    <span className="text-muted-foreground">Payment Reference</span>
+                    <code className="text-xs font-mono bg-muted px-2 py-1 rounded">
+                      {maskUtr(donation.utr)}
+                    </code>
+                  </div>
+
+                  <div className="flex justify-between items-center py-3 border-b">
+                    <span className="text-muted-foreground">Status</span>
+                    {getStatusBadge(donation.status)}
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="bg-muted/50 rounded-lg p-4 text-sm">
+              <p className="text-muted-foreground">
+                {isDonation 
+                  ? 'This donation has been recorded on the blockchain and is publicly visible in the ledger.'
+                  : 'This spending record has been recorded on the blockchain and is publicly visible in the ledger.'
+                }
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     </div>
   );
 }

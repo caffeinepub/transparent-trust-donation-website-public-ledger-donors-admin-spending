@@ -13,6 +13,7 @@ import { useNavigate } from '@tanstack/react-router';
 import SpendingBreakdownCard from '@/components/ledger/SpendingBreakdownCard';
 import RecentTransactionsList from '@/components/ledger/RecentTransactionsList';
 import { APPROVED_IMAGE_PATH } from '@/utils/approvedImage';
+import { formatINR } from '@/utils/formatCurrency';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -21,11 +22,6 @@ export default function DashboardPage() {
   const { data: totalSpending, isLoading: spendingLoading } = useGetTotalSpending();
   const { data: recentDonations = [] } = useGetDonations(10, 0);
   const { data: recentSpending = [] } = useGetSpendingRecords(10, 0);
-
-  const formatCurrency = (amount: bigint | undefined) => {
-    if (amount === undefined) return '$0.00';
-    return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
 
   return (
     <div className="min-h-screen">
@@ -82,7 +78,7 @@ export default function DashboardPage() {
               {balanceLoading ? (
                 <Skeleton className="h-8 w-32" />
               ) : (
-                <div className="text-2xl font-bold">{formatCurrency(balance)}</div>
+                <div className="text-2xl font-bold">{formatINR(balance)}</div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Available funds for community support
@@ -99,7 +95,7 @@ export default function DashboardPage() {
               {donationsLoading ? (
                 <Skeleton className="h-8 w-32" />
               ) : (
-                <div className="text-2xl font-bold">{formatCurrency(totalDonations)}</div>
+                <div className="text-2xl font-bold">{formatINR(totalDonations)}</div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Confirmed contributions received
@@ -116,7 +112,7 @@ export default function DashboardPage() {
               {spendingLoading ? (
                 <Skeleton className="h-8 w-32" />
               ) : (
-                <div className="text-2xl font-bold">{formatCurrency(totalSpending)}</div>
+                <div className="text-2xl font-bold">{formatINR(totalSpending)}</div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Funds distributed to beneficiaries

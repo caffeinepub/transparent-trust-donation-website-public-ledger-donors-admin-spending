@@ -8,75 +8,74 @@ import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function SpendingForm() {
-  const addSpending = useAddSpendingRecord();
-  const { data: balance } = useGetTrustBalance();
-
   const [amount, setAmount] = useState('');
   const [description, setDescription] = useState('');
+  const addSpending = useAddSpendingRecord();
+  const { data: balance } = useGetTrustBalance();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    const amountNum = parseFloat(amount);
-    if (isNaN(amountNum) || amountNum <= 0) {
-      toast.error('Please enter a valid amount greater than 0');
+    const amountValue = parseFloat(amount);
+    if (isNaN(amountValue) || amountValue <= 0) {
+      toast.error('Please enter a valid amount');
       return;
     }
 
     if (!description.trim()) {
-      toast.error('Please provide a description');
+      toast.error('Please enter a description');
       return;
     }
 
-    const amountInCents = BigInt(Math.round(amountNum * 100));
-    
-    // Check if spending would make balance negative
-    if (balance !== undefined && amountInCents > balance) {
-      toast.error('Insufficient balance for this spending amount');
+    // Convert rupees to paise (minor units)
+    const amountInPaise = BigInt(Math.round(amountValue * 100));
+
+    // Check if spending exceeds balance
+    if (balance !== undefined && amountInPaise > balance) {
+      toast.error('Spending amount exceeds available balance');
       return;
     }
 
     try {
       await addSpending.mutateAsync({
-        amount: amountInCents,
+        amount: amountInPaise,
         description: description.trim(),
       });
       toast.success('Spending record added successfully');
       setAmount('');
       setDescription('');
-    } catch (error: any) {
+    } catch (error) {
       console.error('Spending error:', error);
-      if (error.message?.includes('Insufficient')) {
-        toast.error('Insufficient balance for this spending amount');
-      } else {
-        toast.error('Failed to add spending record. Please try again.');
-      }
+      toast.error('Failed to add spending record');
     }
   };
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
       <div className="space-y-2">
-        <Label htmlFor="spending-amount">Amount (USD) *</Label>
+        <Label htmlFor="amount">Amount (INR) *</Label>
         <Input
-          id="spending-amount"
+          id="amount"
           type="number"
           step="0.01"
-          min="0.01"
+          min="0"
           value={amount}
           onChange={(e) => setAmount(e.target.value)}
-          placeholder="100.00"
+          placeholder="Enter amount in rupees"
           required
         />
+        <p className="text-xs text-muted-foreground">
+          Enter the amount spent in Indian Rupees
+        </p>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="spending-description">Description / Purpose *</Label>
+        <Label htmlFor="description">Description *</Label>
         <Textarea
-          id="spending-description"
+          id="description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          placeholder="Describe how the funds were used (e.g., 'Food supplies for 20 families', 'School supplies for orphanage')..."
+          placeholder="Describe what this spending was for (e.g., food supplies, medical expenses)"
           rows={4}
           required
         />

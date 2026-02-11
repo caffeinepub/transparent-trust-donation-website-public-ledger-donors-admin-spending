@@ -7,6 +7,15 @@ import { Skeleton } from '@/components/ui/skeleton';
 export type TransactionType = 'all' | 'incoming' | 'outgoing';
 export type SortOrder = 'newest' | 'oldest';
 
+type Transaction = {
+  id: string;
+  type: 'donation' | 'spending';
+  amount: bigint;
+  timestamp: bigint;
+  description: string;
+  status?: string;
+};
+
 export default function LedgerPage() {
   const [typeFilter, setTypeFilter] = useState<TransactionType>('all');
   const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
@@ -17,20 +26,39 @@ export default function LedgerPage() {
   const isLoading = donationsLoading || spendingLoading;
 
   const transactions = useMemo(() => {
-    let combined: Array<{ type: 'donation' | 'spending'; data: any }> = [];
+    let combined: Transaction[] = [];
 
     if (typeFilter === 'all' || typeFilter === 'incoming') {
-      combined = [...combined, ...donations.map(d => ({ type: 'donation' as const, data: d }))];
+      combined = [
+        ...combined,
+        ...donations.map(d => ({
+          id: d.id,
+          type: 'donation' as const,
+          amount: d.amount,
+          timestamp: d.timestamp,
+          description: d.description,
+          status: d.status,
+        }))
+      ];
     }
 
     if (typeFilter === 'all' || typeFilter === 'outgoing') {
-      combined = [...combined, ...spending.map(s => ({ type: 'spending' as const, data: s }))];
+      combined = [
+        ...combined,
+        ...spending.map(s => ({
+          id: s.id,
+          type: 'spending' as const,
+          amount: s.amount,
+          timestamp: s.timestamp,
+          description: s.description,
+        }))
+      ];
     }
 
     // Sort by timestamp
     combined.sort((a, b) => {
-      const timeA = Number(a.data.timestamp);
-      const timeB = Number(b.data.timestamp);
+      const timeA = Number(a.timestamp);
+      const timeB = Number(b.timestamp);
       return sortOrder === 'newest' ? timeB - timeA : timeA - timeB;
     });
 
@@ -42,7 +70,7 @@ export default function LedgerPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Transaction Ledger</h1>
         <p className="text-muted-foreground">
-          Complete transparency: every donation received and every dollar spent.
+          Complete transparency: every donation received and every rupee spent.
         </p>
       </div>
 

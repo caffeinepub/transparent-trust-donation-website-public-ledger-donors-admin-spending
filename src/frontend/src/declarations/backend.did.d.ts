@@ -11,11 +11,12 @@ import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
 export interface DonationInput {
+  'utr' : string,
   'displayName' : string,
   'donorId' : string,
   'description' : string,
   'email' : [] | [string],
-  'phone' : [] | [string],
+  'phone' : string,
   'amount' : bigint,
 }
 export interface DonorProfile {
@@ -24,13 +25,13 @@ export interface DonorProfile {
   'displayName' : string,
   'joinedTimestamp' : Time,
   'email' : [] | [string],
-  'phone' : [] | [string],
+  'phone' : string,
   'totalDonated' : bigint,
 }
 export interface DonorPublicProfile {
   'id' : string,
   'principal' : [] | [Principal],
-  'maskedPhone' : [] | [string],
+  'maskedPhone' : string,
   'displayName' : string,
   'joinedTimestamp' : Time,
   'email' : [] | [string],
@@ -48,6 +49,7 @@ export interface Record {
 }
 export interface Record__1 {
   'id' : string,
+  'utr' : string,
   'status' : Status,
   'donorId' : string,
   'description' : string,
@@ -71,6 +73,7 @@ export interface _SERVICE {
   'addDonation' : ActorMethod<[DonationInput], string>,
   'addSpendingRecord' : ActorMethod<[bigint, string], string>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
+  'confirmAllPendingDonations' : ActorMethod<[], undefined>,
   'confirmDonation' : ActorMethod<[string], undefined>,
   'declineDonation' : ActorMethod<[string], undefined>,
   'deleteSpendingRecord' : ActorMethod<[string], undefined>,
@@ -88,16 +91,17 @@ export interface _SERVICE {
   'getTotalSpending' : ActorMethod<[], bigint>,
   'getTrustBalance' : ActorMethod<[], bigint>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'heartbeatLiveViewer' : ActorMethod<[string], undefined>,
   'incrementSiteViews' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'registerLiveViewer' : ActorMethod<[string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'unregisterLiveViewer' : ActorMethod<[string], undefined>,
   'updateDonorProfileAdmin' : ActorMethod<
-    [string, string, [] | [string], [] | [string]],
+    [string, string, [] | [string], string],
     undefined
   >,
   'updateSpendingRecord' : ActorMethod<[string, bigint, string], undefined>,
-  'viewerConnected' : ActorMethod<[], undefined>,
-  'viewerDisconnected' : ActorMethod<[], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

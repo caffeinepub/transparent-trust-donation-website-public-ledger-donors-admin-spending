@@ -6,28 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, DollarSign, Mail, Phone, User } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { maskPhoneNumber } from '@/utils/phoneMask';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { formatINR } from '@/utils/formatCurrency';
 
 export default function DonorDetailPage() {
   const { id } = useParams({ from: '/donor/$id' });
   const navigate = useNavigate();
-  const { isAdmin, isLoading: adminLoading } = useAdminStatus();
-  
-  // Fetch admin profile only if user is admin
-  const { data: adminDonor, isLoading: adminDonorLoading } = useGetDonorProfile(id, isAdmin);
-  
-  // Fetch public profile only if user is not admin
-  const { data: publicDonor, isLoading: publicDonorLoading } = useGetDonorPublicProfile(id, !isAdmin);
-  
+  const { data: isAdmin, isLoading: adminLoading } = useAdminStatus();
+
+  const { data: fullProfile, isLoading: fullLoading } = useGetDonorProfile(id);
+  const { data: publicProfile, isLoading: publicLoading } = useGetDonorPublicProfile(id);
   const { data: donations = [], isLoading: donationsLoading } = useGetDonorDonations(id);
 
-  // Use the appropriate donor data based on admin status
-  const donor = isAdmin ? adminDonor : publicDonor;
-  const isLoading = adminLoading || donationsLoading || (isAdmin ? adminDonorLoading : publicDonorLoading);
-
-  const formatCurrency = (amount: bigint) => {
-    return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
+  const isLoading = adminLoading || (isAdmin ? fullLoading : publicLoading) || donationsLoading;
+  const profile = isAdmin ? fullProfile : publicProfile;
 
   const formatDate = (timestamp: bigint) => {
     const date = new Date(Number(timestamp) / 1000000);
@@ -36,6 +28,15 @@ export default function DonorDetailPage() {
       month: 'long',
       day: 'numeric',
     });
+  };
+
+  const getInitials = (name: string) => {
+    return name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const getStatusBadge = (status: string) => {
@@ -47,26 +48,6 @@ export default function DonorDetailPage() {
     return <Badge variant={variants[status] || 'secondary'}>{status}</Badge>;
   };
 
-  // Get phone number - for admins show full, for non-admins show masked
-  const getPhoneDisplay = () => {
-    if (!donor) return null;
-    
-    if (isAdmin && 'phone' in donor) {
-      // Admin sees full phone from DonorProfile
-      return donor.phone;
-    } else if (!isAdmin && 'maskedPhone' in donor) {
-      // Non-admin sees maskedPhone from DonorPublicProfile
-      return donor.maskedPhone;
-    }
-    
-    // Defensive fallback: mask any phone that might slip through
-    if ('phone' in donor && donor.phone) {
-      return maskPhoneNumber(donor.phone);
-    }
-    
-    return null;
-  };
-
   if (isLoading) {
     return (
       <div className="container py-12">
@@ -76,7 +57,7 @@ export default function DonorDetailPage() {
     );
   }
 
-  if (!donor) {
+  if (!profile) {
     return (
       <div className="container py-12">
         <div className="text-center">
@@ -90,7 +71,12 @@ export default function DonorDetailPage() {
     );
   }
 
-  const phoneDisplay = getPhoneDisplay();
+  // Determine phone display based on profile type
+  const displayPhone = isAdmin && 'phone' in profile
+    ? profile.phone
+    : 'maskedPhone' in profile
+    ? profile.maskedPhone
+    : undefined;
 
   return (
     <div className="container py-12">
@@ -108,59 +94,72 @@ export default function DonorDetailPage() {
           <CardHeader>
             <CardTitle>Donor Profile</CardTitle>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <User className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Name</p>
-                <p className="font-medium">{donor.displayName || 'Anonymous'}</p>
-              </div>
+          <CardContent className="space-y-6">
+            <div className="flex flex-col items-center text-center">
+              <Avatar className="h-24 w-24 mb-4">
+                <AvatarFallback className="bg-primary/10 text-primary text-2xl">
+                  {getInitials(profile.displayName || 'Anonymous')}
+                </AvatarFallback>
+              </Avatar>
+              <h2 className="text-2xl font-bold">{profile.displayName || 'Anonymous'}</h2>
             </div>
 
-            {donor.email && (
+            <div className="space-y-4">
               <div className="flex items-start gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
-                  <Mail className="h-5 w-5 text-primary" />
+                  <DollarSign className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Email</p>
-                  <p className="font-medium break-all">{donor.email}</p>
+                  <p className="text-sm text-muted-foreground">Total Donated</p>
+                  <p className="text-xl font-bold text-chart-1">{formatINR(profile.totalDonated)}</p>
                 </div>
               </div>
-            )}
 
-            {phoneDisplay && (
               <div className="flex items-start gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
-                  <Phone className="h-5 w-5 text-primary" />
+                  <Calendar className="h-5 w-5 text-primary" />
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="font-medium">{phoneDisplay}</p>
+                  <p className="text-sm text-muted-foreground">Member Since</p>
+                  <p className="font-medium">{formatDate(profile.joinedTimestamp)}</p>
                 </div>
               </div>
-            )}
 
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <Calendar className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Member Since</p>
-                <p className="font-medium">{formatDate(donor.joinedTimestamp)}</p>
-              </div>
-            </div>
+              {profile.email && (
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Mail className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Email</p>
+                    <p className="font-medium break-all">{profile.email}</p>
+                  </div>
+                </div>
+              )}
 
-            <div className="flex items-start gap-3">
-              <div className="p-2 rounded-lg bg-primary/10">
-                <DollarSign className="h-5 w-5 text-primary" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Total Donated</p>
-                <p className="text-2xl font-bold">{formatCurrency(donor.totalDonated)}</p>
-              </div>
+              {displayPhone && (
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Phone className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Phone</p>
+                    <p className="font-medium">{displayPhone}</p>
+                  </div>
+                </div>
+              )}
+
+              {profile.principal && (
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <User className="h-5 w-5 text-primary" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-muted-foreground">Principal ID</p>
+                    <p className="font-mono text-xs break-all">{profile.principal.toString()}</p>
+                  </div>
+                </div>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -177,20 +176,19 @@ export default function DonorDetailPage() {
                 {donations.map((donation) => (
                   <div 
                     key={donation.id}
-                    className="flex items-center justify-between p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors"
+                    className="p-4 rounded-lg border border-border hover:bg-accent/50 transition-colors cursor-pointer"
+                    onClick={() => navigate({ to: '/transaction/$id', params: { id: donation.id } })}
                   >
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-1">
-                        <p className="font-medium">{formatCurrency(donation.amount)}</p>
-                        {getStatusBadge(donation.status)}
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <p className="font-bold text-lg text-chart-1">{formatINR(donation.amount)}</p>
+                        <p className="text-sm text-muted-foreground">{formatDate(donation.timestamp)}</p>
                       </div>
-                      <p className="text-sm text-muted-foreground">
-                        {formatDate(donation.timestamp)}
-                      </p>
-                      {donation.description && (
-                        <p className="text-sm mt-1">{donation.description}</p>
-                      )}
+                      {getStatusBadge(donation.status)}
                     </div>
+                    {donation.description && (
+                      <p className="text-sm mt-2">{donation.description}</p>
+                    )}
                   </div>
                 ))}
               </div>

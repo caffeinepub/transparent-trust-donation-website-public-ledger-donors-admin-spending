@@ -42,63 +42,39 @@ export function useGetTotalSpending() {
   });
 }
 
-// Site metrics queries
+// Site metrics queries - Public, resilient for anonymous users
 export function useGetSiteMetrics() {
   const { actor, isFetching } = useActor();
 
   return useQuery<Metrics>({
     queryKey: ['siteMetrics'],
     queryFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.getSiteMetrics();
+      if (!actor) {
+        // Return safe default instead of throwing
+        return {
+          totalSiteViews: BigInt(0),
+          currentLiveViewers: BigInt(0),
+        };
+      }
+      try {
+        return await actor.getSiteMetrics();
+      } catch (error) {
+        console.error('Error fetching site metrics:', error);
+        // Return safe default on error
+        return {
+          totalSiteViews: BigInt(0),
+          currentLiveViewers: BigInt(0),
+        };
+      }
     },
     enabled: !!actor && !isFetching,
-    refetchInterval: 10000, // Poll every 10 seconds
+    refetchInterval: 10000, // Poll every 10 seconds for live viewer updates
     retry: 3,
-  });
-}
-
-export function useIncrementSiteViews() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.incrementSiteViews();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['siteMetrics'] });
-    },
-  });
-}
-
-export function useViewerConnected() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.viewerConnected();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['siteMetrics'] });
-    },
-  });
-}
-
-export function useViewerDisconnected() {
-  const { actor } = useActor();
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      if (!actor) throw new Error('Actor not available');
-      return actor.viewerDisconnected();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['siteMetrics'] });
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    staleTime: 5000, // Consider data stale after 5 seconds
+    placeholderData: {
+      totalSiteViews: BigInt(0),
+      currentLiveViewers: BigInt(0),
     },
   });
 }

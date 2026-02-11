@@ -1,6 +1,7 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { formatINR } from '@/utils/formatCurrency';
 
 interface DonorProfile {
   id: string;
@@ -17,10 +18,6 @@ interface DonorsTableProps {
 
 export default function DonorsTable({ donors }: DonorsTableProps) {
   const navigate = useNavigate();
-
-  const formatCurrency = (amount: bigint) => {
-    return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
 
   const formatDate = (timestamp: bigint) => {
     const date = new Date(Number(timestamp) / 1000000);
@@ -76,7 +73,7 @@ export default function DonorsTable({ donors }: DonorsTableProps) {
                 {formatDate(donor.joinedTimestamp)}
               </TableCell>
               <TableCell className="text-right font-bold text-chart-1">
-                {formatCurrency(donor.totalDonated)}
+                {formatINR(donor.totalDonated)}
               </TableCell>
             </TableRow>
           ))}

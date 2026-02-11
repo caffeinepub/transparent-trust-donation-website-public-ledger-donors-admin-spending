@@ -90,18 +90,19 @@ export class ExternalBlob {
     }
 }
 export interface DonationInput {
+    utr: string;
     displayName: string;
     donorId: string;
     description: string;
     email?: string;
-    phone?: string;
+    phone: string;
     amount: bigint;
 }
 export type Time = bigint;
 export interface DonorPublicProfile {
     id: string;
     principal?: Principal;
-    maskedPhone?: string;
+    maskedPhone: string;
     displayName: string;
     joinedTimestamp: Time;
     email?: string;
@@ -115,6 +116,7 @@ export interface Record_ {
 }
 export interface Record__1 {
     id: string;
+    utr: string;
     status: Status;
     donorId: string;
     description: string;
@@ -127,7 +129,7 @@ export interface DonorProfile {
     displayName: string;
     joinedTimestamp: Time;
     email?: string;
-    phone?: string;
+    phone: string;
     totalDonated: bigint;
 }
 export interface UserProfile {
@@ -154,6 +156,7 @@ export interface backendInterface {
     addDonation(donationInput: DonationInput): Promise<string>;
     addSpendingRecord(amount: bigint, description: string): Promise<string>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
+    confirmAllPendingDonations(): Promise<void>;
     confirmDonation(donationId: string): Promise<void>;
     declineDonation(donationId: string): Promise<void>;
     deleteSpendingRecord(id: string): Promise<void>;
@@ -171,13 +174,14 @@ export interface backendInterface {
     getTotalSpending(): Promise<bigint>;
     getTrustBalance(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    heartbeatLiveViewer(sessionId: string): Promise<void>;
     incrementSiteViews(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
+    registerLiveViewer(sessionId: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
-    updateDonorProfileAdmin(donorId: string, displayName: string, email: string | null, phone: string | null): Promise<void>;
+    unregisterLiveViewer(sessionId: string): Promise<void>;
+    updateDonorProfileAdmin(donorId: string, displayName: string, email: string | null, phone: string): Promise<void>;
     updateSpendingRecord(id: string, amount: bigint, description: string): Promise<void>;
-    viewerConnected(): Promise<void>;
-    viewerDisconnected(): Promise<void>;
 }
 import type { DonationInput as _DonationInput, DonorProfile as _DonorProfile, DonorPublicProfile as _DonorPublicProfile, Record__1 as _Record__1, Status as _Status, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
@@ -235,6 +239,20 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.assignCallerUserRole(arg0, to_candid_UserRole_n3(this._uploadFile, this._downloadFile, arg1));
+            return result;
+        }
+    }
+    async confirmAllPendingDonations(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.confirmAllPendingDonations();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.confirmAllPendingDonations();
             return result;
         }
     }
@@ -476,6 +494,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
         }
     }
+    async heartbeatLiveViewer(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.heartbeatLiveViewer(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.heartbeatLiveViewer(arg0);
+            return result;
+        }
+    }
     async incrementSiteViews(): Promise<void> {
         if (this.processError) {
             try {
@@ -504,6 +536,20 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async registerLiveViewer(arg0: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.registerLiveViewer(arg0);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.registerLiveViewer(arg0);
+            return result;
+        }
+    }
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
@@ -518,17 +564,31 @@ export class Backend implements backendInterface {
             return result;
         }
     }
-    async updateDonorProfileAdmin(arg0: string, arg1: string, arg2: string | null, arg3: string | null): Promise<void> {
+    async unregisterLiveViewer(arg0: string): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateDonorProfileAdmin(arg0, arg1, to_candid_opt_n27(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n27(this._uploadFile, this._downloadFile, arg3));
+                const result = await this.actor.unregisterLiveViewer(arg0);
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateDonorProfileAdmin(arg0, arg1, to_candid_opt_n27(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n27(this._uploadFile, this._downloadFile, arg3));
+            const result = await this.actor.unregisterLiveViewer(arg0);
+            return result;
+        }
+    }
+    async updateDonorProfileAdmin(arg0: string, arg1: string, arg2: string | null, arg3: string): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.updateDonorProfileAdmin(arg0, arg1, to_candid_opt_n27(this._uploadFile, this._downloadFile, arg2), arg3);
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.updateDonorProfileAdmin(arg0, arg1, to_candid_opt_n27(this._uploadFile, this._downloadFile, arg2), arg3);
             return result;
         }
     }
@@ -543,34 +603,6 @@ export class Backend implements backendInterface {
             }
         } else {
             const result = await this.actor.updateSpendingRecord(arg0, arg1, arg2);
-            return result;
-        }
-    }
-    async viewerConnected(): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.viewerConnected();
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.viewerConnected();
-            return result;
-        }
-    }
-    async viewerDisconnected(): Promise<void> {
-        if (this.processError) {
-            try {
-                const result = await this.actor.viewerDisconnected();
-                return result;
-            } catch (e) {
-                this.processError(e);
-                throw new Error("unreachable");
-            }
-        } else {
-            const result = await this.actor.viewerDisconnected();
             return result;
         }
     }
@@ -610,6 +642,7 @@ function from_candid_opt_n8(_uploadFile: (file: ExternalBlob) => Promise<Uint8Ar
 }
 function from_candid_record_n13(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: string;
+    utr: string;
     status: _Status;
     donorId: string;
     description: string;
@@ -617,6 +650,7 @@ function from_candid_record_n13(_uploadFile: (file: ExternalBlob) => Promise<Uin
     amount: bigint;
 }): {
     id: string;
+    utr: string;
     status: Status;
     donorId: string;
     description: string;
@@ -625,6 +659,7 @@ function from_candid_record_n13(_uploadFile: (file: ExternalBlob) => Promise<Uin
 } {
     return {
         id: value.id,
+        utr: value.utr,
         status: from_candid_Status_n14(_uploadFile, _downloadFile, value.status),
         donorId: value.donorId,
         description: value.description,
@@ -638,7 +673,7 @@ function from_candid_record_n18(_uploadFile: (file: ExternalBlob) => Promise<Uin
     displayName: string;
     joinedTimestamp: _Time;
     email: [] | [string];
-    phone: [] | [string];
+    phone: string;
     totalDonated: bigint;
 }): {
     id: string;
@@ -646,7 +681,7 @@ function from_candid_record_n18(_uploadFile: (file: ExternalBlob) => Promise<Uin
     displayName: string;
     joinedTimestamp: Time;
     email?: string;
-    phone?: string;
+    phone: string;
     totalDonated: bigint;
 } {
     return {
@@ -655,14 +690,14 @@ function from_candid_record_n18(_uploadFile: (file: ExternalBlob) => Promise<Uin
         displayName: value.displayName,
         joinedTimestamp: value.joinedTimestamp,
         email: record_opt_to_undefined(from_candid_opt_n8(_uploadFile, _downloadFile, value.email)),
-        phone: record_opt_to_undefined(from_candid_opt_n8(_uploadFile, _downloadFile, value.phone)),
+        phone: value.phone,
         totalDonated: value.totalDonated
     };
 }
 function from_candid_record_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     id: string;
     principal: [] | [Principal];
-    maskedPhone: [] | [string];
+    maskedPhone: string;
     displayName: string;
     joinedTimestamp: _Time;
     email: [] | [string];
@@ -670,7 +705,7 @@ function from_candid_record_n23(_uploadFile: (file: ExternalBlob) => Promise<Uin
 }): {
     id: string;
     principal?: Principal;
-    maskedPhone?: string;
+    maskedPhone: string;
     displayName: string;
     joinedTimestamp: Time;
     email?: string;
@@ -679,7 +714,7 @@ function from_candid_record_n23(_uploadFile: (file: ExternalBlob) => Promise<Uin
     return {
         id: value.id,
         principal: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.principal)),
-        maskedPhone: record_opt_to_undefined(from_candid_opt_n8(_uploadFile, _downloadFile, value.maskedPhone)),
+        maskedPhone: value.maskedPhone,
         displayName: value.displayName,
         joinedTimestamp: value.joinedTimestamp,
         email: record_opt_to_undefined(from_candid_opt_n8(_uploadFile, _downloadFile, value.email)),
@@ -741,26 +776,29 @@ function to_candid_opt_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Arr
     return value === null ? candid_none() : candid_some(value);
 }
 function to_candid_record_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    utr: string;
     displayName: string;
     donorId: string;
     description: string;
     email?: string;
-    phone?: string;
+    phone: string;
     amount: bigint;
 }): {
+    utr: string;
     displayName: string;
     donorId: string;
     description: string;
     email: [] | [string];
-    phone: [] | [string];
+    phone: string;
     amount: bigint;
 } {
     return {
+        utr: value.utr,
         displayName: value.displayName,
         donorId: value.donorId,
         description: value.description,
         email: value.email ? candid_some(value.email) : candid_none(),
-        phone: value.phone ? candid_some(value.phone) : candid_none(),
+        phone: value.phone,
         amount: value.amount
     };
 }

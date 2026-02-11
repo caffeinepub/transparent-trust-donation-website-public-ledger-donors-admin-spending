@@ -11,18 +11,22 @@ export default function SiteHeader() {
   const navigate = useNavigate();
   const { isAdmin } = useAdminStatus();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { data: metrics, isLoading: metricsLoading } = useGetSiteMetrics();
+  const { data: metrics, isLoading: metricsLoading, isError } = useGetSiteMetrics();
+
+  // Safe display values with fallbacks
+  const totalViews = metrics?.totalSiteViews ? Number(metrics.totalSiteViews).toLocaleString() : '0';
+  const liveViewers = metrics?.currentLiveViewers ? Number(metrics.currentLiveViewers).toLocaleString() : '0';
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container">
-        {/* Metrics Bar */}
+        {/* Metrics Bar - Always visible for everyone */}
         <div className="flex items-center justify-center gap-6 py-2 border-b border-border/20">
           <div className="flex items-center gap-2 text-sm">
             <Eye className="h-4 w-4 text-primary" />
             <span className="font-medium">Total Views:</span>
             <span className="text-muted-foreground">
-              {metricsLoading ? '...' : metrics ? Number(metrics.totalSiteViews).toLocaleString() : '0'}
+              {metricsLoading ? '...' : isError ? '0' : totalViews}
             </span>
           </div>
           <div className="h-4 w-px bg-border/40" />
@@ -30,7 +34,7 @@ export default function SiteHeader() {
             <Users className="h-4 w-4 text-accent" />
             <span className="font-medium">Live Viewers:</span>
             <span className="text-muted-foreground">
-              {metricsLoading ? '...' : metrics ? Number(metrics.currentLiveViewers).toLocaleString() : '0'}
+              {metricsLoading ? '...' : isError ? '0' : liveViewers}
             </span>
           </div>
         </div>
@@ -71,7 +75,7 @@ export default function SiteHeader() {
             </Link>
             {isAdmin && (
               <Link 
-                to="/admin/spending" 
+                to="/admin" 
                 className="text-sm font-medium transition-colors hover:text-primary"
               >
                 Admin
@@ -129,7 +133,7 @@ export default function SiteHeader() {
             </Link>
             {isAdmin && (
               <Link 
-                to="/admin/spending" 
+                to="/admin" 
                 className="text-sm font-medium py-2 hover:text-primary transition-colors"
                 onClick={() => setMobileMenuOpen(false)}
               >

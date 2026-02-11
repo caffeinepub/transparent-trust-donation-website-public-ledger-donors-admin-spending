@@ -50,6 +50,15 @@ export default function SpendingBreakdownCard({ spendingRecords }: SpendingBreak
     'oklch(0.769 0.188 70.08)',
   ];
 
+  const formatTooltipValue = (value: number) => {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    }).format(value);
+  };
+
   if (spendingRecords.length === 0) {
     return (
       <Card>
@@ -88,9 +97,7 @@ export default function SpendingBreakdownCard({ spendingRecords }: SpendingBreak
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip 
-                formatter={(value: number) => `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-              />
+              <Tooltip formatter={formatTooltipValue} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>

@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ArrowUpRight, ArrowDownRight } from 'lucide-react';
 import { useNavigate } from '@tanstack/react-router';
+import { formatINR } from '@/utils/formatCurrency';
 
 interface DonationRecord {
   id: string;
@@ -38,10 +39,6 @@ export default function RecentTransactionsList({ donations, spending }: RecentTr
     combined.sort((a, b) => Number(b.timestamp) - Number(a.timestamp));
     return combined.slice(0, 10);
   }, [donations, spending]);
-
-  const formatCurrency = (amount: bigint) => {
-    return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
 
   const formatDate = (timestamp: bigint) => {
     const date = new Date(Number(timestamp) / 1000000);
@@ -108,7 +105,7 @@ export default function RecentTransactionsList({ donations, spending }: RecentTr
                   </div>
                   <div className="text-right">
                     <p className={`font-bold ${isDonation ? 'text-chart-1' : 'text-chart-2'}`}>
-                      {isDonation ? '+' : '-'}{formatCurrency(data.amount)}
+                      {isDonation ? '+' : '-'}{formatINR(data.amount)}
                     </p>
                   </div>
                 </div>

@@ -1,20 +1,24 @@
-import { RouterProvider, createRouter, createRoute, createRootRoute } from '@tanstack/react-router';
+import { RouterProvider, createRouter, createRoute, createRootRoute, Outlet } from '@tanstack/react-router';
 import { ThemeProvider } from 'next-themes';
 import { Toaster } from '@/components/ui/sonner';
 import SiteLayout from './components/layout/SiteLayout';
+import AdminLayout from './components/layout/AdminLayout';
 import DashboardPage from './pages/DashboardPage';
 import LedgerPage from './pages/LedgerPage';
 import TransactionDetailPage from './pages/TransactionDetailPage';
 import DonorsPage from './pages/DonorsPage';
 import DonorDetailPage from './pages/DonorDetailPage';
 import DonatePage from './pages/DonatePage';
+import AdminPortalPage from './pages/admin/AdminPortalPage';
 import AdminSpendingPage from './pages/admin/AdminSpendingPage';
 import AdminDonationsPage from './pages/admin/AdminDonationsPage';
 
+// Root route for public pages with SiteLayout
 const rootRoute = createRootRoute({
   component: SiteLayout,
 });
 
+// Public routes
 const indexRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: '/',
@@ -51,15 +55,29 @@ const donateRoute = createRoute({
   component: DonatePage,
 });
 
-const adminSpendingRoute = createRoute({
+// Admin root route with AdminLayout
+const adminRootRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: '/admin/spending',
+  path: '/admin',
+  component: AdminLayout,
+});
+
+// Admin child routes
+const adminIndexRoute = createRoute({
+  getParentRoute: () => adminRootRoute,
+  path: '/',
+  component: AdminPortalPage,
+});
+
+const adminSpendingRoute = createRoute({
+  getParentRoute: () => adminRootRoute,
+  path: '/spending',
   component: AdminSpendingPage,
 });
 
 const adminDonationsRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: '/admin/donations',
+  getParentRoute: () => adminRootRoute,
+  path: '/donations',
   component: AdminDonationsPage,
 });
 
@@ -70,8 +88,11 @@ const routeTree = rootRoute.addChildren([
   donorsRoute,
   donorDetailRoute,
   donateRoute,
-  adminSpendingRoute,
-  adminDonationsRoute,
+  adminRootRoute.addChildren([
+    adminIndexRoute,
+    adminSpendingRoute,
+    adminDonationsRoute,
+  ]),
 ]);
 
 const router = createRouter({ routeTree });

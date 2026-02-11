@@ -10,10 +10,9 @@ import Time "mo:core/Time";
 import Order "mo:core/Order";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
-import Migration "migration";
+
 import Char "mo:core/Char";
 
-(with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -32,6 +31,7 @@ actor {
       timestamp : Time.Time;
       description : Text;
       status : Status;
+      utr : Text;
     };
   };
 
@@ -40,18 +40,17 @@ actor {
       id : Text;
       displayName : Text;
       email : ?Text;
-      phone : ?Text; // Store actual phone data persistently
+      phone : Text;
       principal : ?Principal;
       joinedTimestamp : Time.Time;
       totalDonated : Nat;
     };
 
-    // Record for non-admin callers with masked phone field
     public type PublicProfile = {
       id : Text;
       displayName : Text;
       email : ?Text;
-      maskedPhone : ?Text; // Masked phone for non-admin return
+      maskedPhone : Text;
       principal : ?Principal;
       joinedTimestamp : Time.Time;
       totalDonated : Nat;
@@ -79,16 +78,19 @@ actor {
   public type DonationRecord = Donation.Record;
   public type DonorPublicProfile = Donor.PublicProfile;
 
+  type LiveViewerSession = {
+    sessionId : Text;
+    lastHeartbeat : Time.Time;
+  };
+
   var donations = List.empty<Donation.Record>();
   var spendingRecords = List.empty<Spending.Record>();
   let donorProfiles = Map.empty<Text, Donor.Profile>();
   let userProfiles = Map.empty<Principal, UserProfile>();
   var nextDonationId : Nat = 0;
   var nextSpendingId : Nat = 0;
-
-  // Site Metrics
-  var totalSiteViews = 0 : Nat;
-  var currentLiveViewers = 0 : Nat;
+  var liveViewerSessions = Map.empty<Text, LiveViewerSession>();
+  var totalSiteViews : Nat = 0;
 
   type Metrics = {
     totalSiteViews : Nat;
@@ -101,7 +103,8 @@ actor {
     description : Text;
     displayName : Text;
     email : ?Text;
-    phone : ?Text;
+    phone : Text;
+    utr : Text;
   };
 
   // User Profile Management (required by frontend)
@@ -126,29 +129,80 @@ actor {
     userProfiles.add(caller, profile);
   };
 
-  // Public donation function - accessible to everyone including guests
-  public shared ({ caller }) func addDonation(donationInput : DonationInput) : async Text {
-    let donationId = nextDonationId.toText();
-    nextDonationId += 1;
+  func isValidIndianPhoneNumber(phone : Text) : Bool {
+    if (phone.size() != 13) { return false };
+    if (not phone.startsWith(#text("+91")) or phone.startsWith(#text("+910"))) { return false };
+    let chars = phone.chars().toArray();
+    for (i in Nat.range(3, 13)) {
+      if (i >= chars.size()) { return false };
+      let c = chars[i];
+      switch (i) {
+        case (3) {
+          if (c < '6' or c > '9') { return false };
+        };
+        case (_) {
+          if (c < '0' or c > '9') { return false };
+        };
+      };
+    };
+    true;
+  };
 
-    let donation : Donation.Record = {
+  // Public donation function
+  public shared ({ caller }) func addDonation(donationInput : DonationInput) : async Text {
+    if (not isValidIndianPhoneNumber(donationInput.phone)) {
+      Runtime.trap("Invalid mobile number! Must be a valid 10-digit Indian mobile number with +91 country code and not 0-prefixed after +91");
+    };
+
+    if (donationInput.utr.trim(#char ' ').size() != 12) {
+      Runtime.trap("UTR must be 12 characters");
+    };
+
+    if (donationInput.amount < 10) {
+      Runtime.trap("Amount must be at least 10");
+    };
+
+    let donationId = nextDonationId.toText();
+    let newDonation = {
       id = donationId;
       donorId = donationInput.donorId;
       amount = donationInput.amount;
-      timestamp = Time.now();
       description = donationInput.description;
+      timestamp = Time.now();
+      utr = donationInput.utr;
       status = #pending;
     };
-    donations.add(donation);
 
-    // Create or update donor profile
-    updateDonorProfile(
-      donationInput.donorId,
-      donationInput.displayName,
-      donationInput.email,
-      donationInput.phone,
-      if (caller.isAnonymous()) { null } else { ?caller },
-    );
+    donations.add(newDonation);
+    nextDonationId += 1;
+
+    switch (donorProfiles.get(donationInput.donorId)) {
+      case (?donor) {
+        let newDonor = {
+          id = donor.id;
+          displayName = if (donationInput.displayName != "") { donationInput.displayName } else { donor.displayName };
+          email = switch (donationInput.email) { case (?e) { ?e }; case (null) { donor.email } };
+          phone = donationInput.phone;
+          principal = donor.principal;
+          joinedTimestamp = donor.joinedTimestamp;
+          totalDonated = donor.totalDonated;
+        };
+
+        donorProfiles.add(donationInput.donorId, newDonor);
+      };
+      case (null) {
+        let newDonor = {
+          id = donationInput.donorId;
+          displayName = donationInput.displayName;
+          email = donationInput.email;
+          phone = donationInput.phone;
+          principal = if (caller.isAnonymous()) { null } else { ?caller };
+          joinedTimestamp = Time.now();
+          totalDonated = 0;
+        };
+        donorProfiles.add(donationInput.donorId, newDonor);
+      };
+    };
 
     donationId;
   };
@@ -170,6 +224,7 @@ actor {
             amount = d.amount;
             timestamp = d.timestamp;
             description = d.description;
+            utr = d.utr;
             status = #confirmed;
           };
         } else {
@@ -177,6 +232,40 @@ actor {
         };
       }
     );
+  };
+
+  public shared ({ caller }) func confirmAllPendingDonations() : async () {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("You need to be an admin to confirm all pending donations");
+    };
+
+    var confirmedCount = 0;
+
+    donations := donations.map<Donation.Record, Donation.Record>(
+      func(donation) {
+        if (donation.status == #pending) {
+          confirmedCount += 1;
+          // Update donor total when confirming
+          updateDonorTotal(donation.donorId, donation.amount);
+
+          {
+            id = donation.id;
+            donorId = donation.donorId;
+            amount = donation.amount;
+            timestamp = donation.timestamp;
+            description = donation.description;
+            utr = donation.utr;
+            status = #confirmed;
+          };
+        } else {
+          donation;
+        };
+      }
+    );
+
+    if (confirmedCount == 0) {
+      Runtime.trap("All donations already confirmed");
+    };
   };
 
   // Admin-only: Decline a donation
@@ -194,6 +283,7 @@ actor {
             amount = d.amount;
             timestamp = d.timestamp;
             description = d.description;
+            utr = d.utr;
             status = #failed;
           };
         } else {
@@ -258,7 +348,7 @@ actor {
     donorId : Text,
     displayName : Text,
     email : ?Text,
-    phone : ?Text,
+    phone : Text,
   ) : async () {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can update donor profiles");
@@ -283,7 +373,6 @@ actor {
     };
   };
 
-  // Public query: Get total confirmed donations
   public query func getTotalDonations() : async Nat {
     let donationsArray = donations.toArray();
     donationsArray.foldLeft<Donation.Record, Nat>(
@@ -298,7 +387,6 @@ actor {
     );
   };
 
-  // Public query: Get total spending
   public query func getTotalSpending() : async Nat {
     let spendingArray = spendingRecords.toArray();
     spendingArray.foldLeft<Spending.Record, Nat>(
@@ -307,7 +395,6 @@ actor {
     );
   };
 
-  // Public query: Get trust balance (donations - spending)
   public query func getTrustBalance() : async Int {
     let totalDonations = donations.toArray().foldLeft(
       0,
@@ -326,28 +413,20 @@ actor {
     totalDonations - totalSpending;
   };
 
-  // Returns the first 5 characters followed by "******"
-  func maskPhoneNumber(phone : ?Text) : ?Text {
-    switch (phone) {
-      case (null) { null };
-      case (?p) {
-        let length = p.size();
-        if (length <= 5) { ?p } else {
-          var result = "";
-          for ((i, char) in p.chars().enumerate()) {
-            result #= (
-              if (i < 5) {
-                Text.fromChar(char);
-              } else { "*" }
-            );
-          };
-          ?result;
-        };
-      };
+  func maskPhoneNumber(phone : Text) : Text {
+    let length = phone.size();
+    if (length <= 5) { return phone };
+    var result = "";
+    for ((i, char) in (phone.chars()).enumerate()) {
+      result #= (
+        if (i < 5) {
+          Text.fromChar(char);
+        } else { "*" }
+      );
     };
+    result;
   };
 
-  // Public for all - returns donor profiles with masked phones
   public query ({ caller }) func getDonorPublicProfiles() : async [DonorPublicProfile] {
     let profiles = donorProfiles.values().toArray();
     profiles.map<Donor.Profile, DonorPublicProfile>(
@@ -365,7 +444,6 @@ actor {
     );
   };
 
-  // Admin-only: Get donor profiles with full details
   public query ({ caller }) func getDonorProfiles() : async [DonorProfile] {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can access full donor profiles");
@@ -379,7 +457,6 @@ actor {
     );
   };
 
-  // Public: Get specific donor profile with masked phone for non-admins
   public query ({ caller }) func getDonorPublicProfile(donorId : Text) : async ?DonorPublicProfile {
     switch (donorProfiles.get(donorId)) {
       case (?profile) {
@@ -397,7 +474,6 @@ actor {
     };
   };
 
-  // Admin-only: Get specific donor profile with full phone
   public query ({ caller }) func getDonorProfile(donorId : Text) : async ?DonorProfile {
     if (not (AccessControl.isAdmin(accessControlState, caller))) {
       Runtime.trap("Unauthorized: Only admins can access full donor profiles");
@@ -405,7 +481,6 @@ actor {
     donorProfiles.get(donorId);
   };
 
-  // Public query: Get donations with pagination
   public query func getDonations(limit : Nat, offset : Nat) : async [Donation.Record] {
     let allDonations = donations.toArray();
     let size = allDonations.size();
@@ -419,13 +494,11 @@ actor {
     );
   };
 
-  // Public query: Get donations for a specific donor
   public query func getDonorDonations(donorId : Text) : async [Donation.Record] {
     let allDonations = donations.toArray();
     allDonations.filter(func(d) { d.donorId == donorId });
   };
 
-  // Public query: Get spending records with pagination
   public query func getSpendingRecords(limit : Nat, offset : Nat) : async [Spending.Record] {
     let allSpending = spendingRecords.toArray();
     let size = allSpending.size();
@@ -439,43 +512,6 @@ actor {
     );
   };
 
-  // Helper function to update donor profile
-  func updateDonorProfile(
-    donorId : Text,
-    displayName : Text,
-    email : ?Text,
-    phone : ?Text, // Actual phone data stored
-    principal : ?Principal,
-  ) {
-    switch (donorProfiles.get(donorId)) {
-      case (?donor) {
-        let updatedDonor : Donor.Profile = {
-          id = donor.id;
-          displayName = if (displayName != "") { displayName } else { donor.displayName };
-          email = switch (email) { case (?e) { ?e }; case (null) { donor.email } };
-          phone = switch (phone) { case (?p) { ?p }; case (null) { donor.phone } };
-          principal = switch (principal) { case (?p) { ?p }; case (null) { donor.principal } };
-          joinedTimestamp = donor.joinedTimestamp;
-          totalDonated = donor.totalDonated;
-        };
-        donorProfiles.add(donorId, updatedDonor);
-      };
-      case (null) {
-        let newDonor : Donor.Profile = {
-          id = donorId;
-          displayName = displayName;
-          email = email;
-          phone = phone; // Store actual phone data
-          principal = principal;
-          joinedTimestamp = Time.now();
-          totalDonated = 0;
-        };
-        donorProfiles.add(donorId, newDonor);
-      };
-    };
-  };
-
-  // Helper function to update donor total (only for confirmed donations)
   func updateDonorTotal(donorId : Text, amount : Nat) {
     switch (donorProfiles.get(donorId)) {
       case (?donor) {
@@ -496,22 +532,56 @@ actor {
     };
   };
 
-  // Site Metrics methods
   public shared ({ caller }) func incrementSiteViews() : async () {
     totalSiteViews += 1;
   };
 
-  public shared ({ caller }) func viewerConnected() : async () {
-    currentLiveViewers += 1;
+  public shared ({ caller }) func registerLiveViewer(sessionId : Text) : async () {
+    let currentTime = Time.now();
+    let newSession : LiveViewerSession = {
+      sessionId;
+      lastHeartbeat = currentTime;
+    };
+    liveViewerSessions.add(sessionId, newSession);
   };
 
-  public shared ({ caller }) func viewerDisconnected() : async () {
-    if (currentLiveViewers > 0) {
-      currentLiveViewers -= 1;
+  public shared ({ caller }) func heartbeatLiveViewer(sessionId : Text) : async () {
+    let currentTime = Time.now();
+    switch (liveViewerSessions.get(sessionId)) {
+      case (?existingSession) {
+        let updatedSession : LiveViewerSession = {
+          sessionId = existingSession.sessionId;
+          lastHeartbeat = currentTime;
+        };
+        liveViewerSessions.add(sessionId, updatedSession);
+      };
+      case (null) {
+        let newSession : LiveViewerSession = {
+          sessionId;
+          lastHeartbeat = currentTime;
+        };
+        liveViewerSessions.add(sessionId, newSession);
+      };
     };
   };
 
-  public query ({ caller }) func getSiteMetrics() : async Metrics {
-    { totalSiteViews; currentLiveViewers };
+  public shared ({ caller }) func unregisterLiveViewer(sessionId : Text) : async () {
+    liveViewerSessions.remove(sessionId);
+  };
+
+  func cleanupStaleSessions() {
+    let now = Time.now();
+    let timeoutNs : Int = 60 * 1_000_000_000;
+    liveViewerSessions := liveViewerSessions.filter(
+      func(_sessionId, session) {
+        now - session.lastHeartbeat < timeoutNs;
+      }
+    );
+  };
+
+  public query func getSiteMetrics() : async Metrics {
+    cleanupStaleSessions();
+    let liveViewers = liveViewerSessions.size();
+    { totalSiteViews; currentLiveViewers = liveViewers };
   };
 };

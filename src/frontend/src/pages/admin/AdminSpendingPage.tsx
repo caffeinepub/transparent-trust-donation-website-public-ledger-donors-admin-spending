@@ -1,29 +1,14 @@
-import AdminGuard from '@/components/auth/AdminGuard';
 import SpendingForm from '@/components/admin/SpendingForm';
 import { useGetSpendingRecords, useGetTrustBalance } from '@/hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { DollarSign, TrendingDown } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Link } from '@tanstack/react-router';
-import { Button } from '@/components/ui/button';
+import { formatINR } from '@/utils/formatCurrency';
 
 export default function AdminSpendingPage() {
-  return (
-    <AdminGuard>
-      <AdminSpendingContent />
-    </AdminGuard>
-  );
-}
-
-function AdminSpendingContent() {
   const { data: balance, isLoading: balanceLoading } = useGetTrustBalance();
   const { data: recentSpending = [], isLoading: spendingLoading } = useGetSpendingRecords(10, 0);
-
-  const formatCurrency = (amount: bigint | undefined) => {
-    if (amount === undefined) return '$0.00';
-    return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
 
   const formatDate = (timestamp: bigint) => {
     const date = new Date(Number(timestamp) / 1000000);
@@ -37,19 +22,12 @@ function AdminSpendingContent() {
   return (
     <div className="container py-12">
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Admin: Spending Management</h1>
-            <p className="text-muted-foreground">
-              Record and manage trust spending for transparency.
-            </p>
-          </div>
-          <Link to="/admin/donations">
-            <Button variant="outline">Manage Donations</Button>
-          </Link>
-        </div>
+        <h1 className="text-3xl font-bold mb-2">Spending Management</h1>
+        <p className="text-muted-foreground">
+          Record and manage trust spending for transparency.
+        </p>
 
-        <Card className="mb-8">
+        <Card className="mt-6">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Available Balance</CardTitle>
             <DollarSign className="h-4 w-4 text-muted-foreground" />
@@ -58,7 +36,7 @@ function AdminSpendingContent() {
             {balanceLoading ? (
               <Skeleton className="h-8 w-32" />
             ) : (
-              <div className="text-3xl font-bold">{formatCurrency(balance)}</div>
+              <div className="text-3xl font-bold">{formatINR(balance)}</div>
             )}
           </CardContent>
         </Card>
@@ -101,7 +79,7 @@ function AdminSpendingContent() {
                     className="p-4 rounded-lg border border-border"
                   >
                     <div className="flex items-start justify-between mb-2">
-                      <p className="font-medium">{formatCurrency(spending.amount)}</p>
+                      <p className="font-medium">{formatINR(spending.amount)}</p>
                       <Badge variant="secondary">{formatDate(spending.timestamp)}</Badge>
                     </div>
                     <p className="text-sm text-muted-foreground">{spending.description}</p>

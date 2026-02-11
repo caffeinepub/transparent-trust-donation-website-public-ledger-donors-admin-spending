@@ -9,11 +9,12 @@
 import { IDL } from '@icp-sdk/core/candid';
 
 export const DonationInput = IDL.Record({
+  'utr' : IDL.Text,
   'displayName' : IDL.Text,
   'donorId' : IDL.Text,
   'description' : IDL.Text,
   'email' : IDL.Opt(IDL.Text),
-  'phone' : IDL.Opt(IDL.Text),
+  'phone' : IDL.Text,
   'amount' : IDL.Nat,
 });
 export const UserRole = IDL.Variant({
@@ -34,6 +35,7 @@ export const Status = IDL.Variant({
 export const Time = IDL.Int;
 export const Record__1 = IDL.Record({
   'id' : IDL.Text,
+  'utr' : IDL.Text,
   'status' : Status,
   'donorId' : IDL.Text,
   'description' : IDL.Text,
@@ -46,13 +48,13 @@ export const DonorProfile = IDL.Record({
   'displayName' : IDL.Text,
   'joinedTimestamp' : Time,
   'email' : IDL.Opt(IDL.Text),
-  'phone' : IDL.Opt(IDL.Text),
+  'phone' : IDL.Text,
   'totalDonated' : IDL.Nat,
 });
 export const DonorPublicProfile = IDL.Record({
   'id' : IDL.Text,
   'principal' : IDL.Opt(IDL.Principal),
-  'maskedPhone' : IDL.Opt(IDL.Text),
+  'maskedPhone' : IDL.Text,
   'displayName' : IDL.Text,
   'joinedTimestamp' : Time,
   'email' : IDL.Opt(IDL.Text),
@@ -74,6 +76,7 @@ export const idlService = IDL.Service({
   'addDonation' : IDL.Func([DonationInput], [IDL.Text], []),
   'addSpendingRecord' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Text], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+  'confirmAllPendingDonations' : IDL.Func([], [], []),
   'confirmDonation' : IDL.Func([IDL.Text], [], []),
   'declineDonation' : IDL.Func([IDL.Text], [], []),
   'deleteSpendingRecord' : IDL.Func([IDL.Text], [], []),
@@ -111,28 +114,30 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'heartbeatLiveViewer' : IDL.Func([IDL.Text], [], []),
   'incrementSiteViews' : IDL.Func([], [], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'registerLiveViewer' : IDL.Func([IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'unregisterLiveViewer' : IDL.Func([IDL.Text], [], []),
   'updateDonorProfileAdmin' : IDL.Func(
-      [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
+      [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Text],
       [],
       [],
     ),
   'updateSpendingRecord' : IDL.Func([IDL.Text, IDL.Nat, IDL.Text], [], []),
-  'viewerConnected' : IDL.Func([], [], []),
-  'viewerDisconnected' : IDL.Func([], [], []),
 });
 
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
   const DonationInput = IDL.Record({
+    'utr' : IDL.Text,
     'displayName' : IDL.Text,
     'donorId' : IDL.Text,
     'description' : IDL.Text,
     'email' : IDL.Opt(IDL.Text),
-    'phone' : IDL.Opt(IDL.Text),
+    'phone' : IDL.Text,
     'amount' : IDL.Nat,
   });
   const UserRole = IDL.Variant({
@@ -153,6 +158,7 @@ export const idlFactory = ({ IDL }) => {
   const Time = IDL.Int;
   const Record__1 = IDL.Record({
     'id' : IDL.Text,
+    'utr' : IDL.Text,
     'status' : Status,
     'donorId' : IDL.Text,
     'description' : IDL.Text,
@@ -165,13 +171,13 @@ export const idlFactory = ({ IDL }) => {
     'displayName' : IDL.Text,
     'joinedTimestamp' : Time,
     'email' : IDL.Opt(IDL.Text),
-    'phone' : IDL.Opt(IDL.Text),
+    'phone' : IDL.Text,
     'totalDonated' : IDL.Nat,
   });
   const DonorPublicProfile = IDL.Record({
     'id' : IDL.Text,
     'principal' : IDL.Opt(IDL.Principal),
-    'maskedPhone' : IDL.Opt(IDL.Text),
+    'maskedPhone' : IDL.Text,
     'displayName' : IDL.Text,
     'joinedTimestamp' : Time,
     'email' : IDL.Opt(IDL.Text),
@@ -193,6 +199,7 @@ export const idlFactory = ({ IDL }) => {
     'addDonation' : IDL.Func([DonationInput], [IDL.Text], []),
     'addSpendingRecord' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Text], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
+    'confirmAllPendingDonations' : IDL.Func([], [], []),
     'confirmDonation' : IDL.Func([IDL.Text], [], []),
     'declineDonation' : IDL.Func([IDL.Text], [], []),
     'deleteSpendingRecord' : IDL.Func([IDL.Text], [], []),
@@ -234,17 +241,18 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'heartbeatLiveViewer' : IDL.Func([IDL.Text], [], []),
     'incrementSiteViews' : IDL.Func([], [], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'registerLiveViewer' : IDL.Func([IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'unregisterLiveViewer' : IDL.Func([IDL.Text], [], []),
     'updateDonorProfileAdmin' : IDL.Func(
-        [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Opt(IDL.Text)],
+        [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Text],
         [],
         [],
       ),
     'updateSpendingRecord' : IDL.Func([IDL.Text, IDL.Nat, IDL.Text], [], []),
-    'viewerConnected' : IDL.Func([], [], []),
-    'viewerDisconnected' : IDL.Func([], [], []),
   });
 };
 

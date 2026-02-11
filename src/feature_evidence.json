@@ -2,14 +2,9 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-frontend-donor-views-to-display-masked-phone-numbers-for-non-admin-viewers-and-full-phone-numbers-only-for-admins-including-the-donor-detail-page-where-the-phone-number-is-currently-rendered",
-      "featureTitle": "Update the frontend donor views to display masked phone numbers for non-admin viewers and full phone numbers only for admins, including the donor detail page where the phone number is currently rendered.",
-      "files": [
-        "frontend/src/hooks/useQueries.ts",
-        "frontend/src/pages/DonorDetailPage.tsx",
-        "frontend/src/pages/DonorsPage.tsx",
-        "frontend/src/utils/phoneMask.ts"
-      ],
+      "featureId": "feature-replace-the-currently-used-upi-qr-static-asset-with-the-newly-uploaded-qr-image-while-keeping-the-frontend-code-and-path-unchanged-so-the-app-continues-to-load-the-qr-from-upi-qr-image-path-assets-generated-upi-qr-dim-800x800-jpg-as-used-by-frontend-src-utils-upiqrimage-ts-and-rendered-in-frontend-src-components-donate-upipaymentsection-tsx-store-the-replacement-file-at-frontend-public-assets-generated-upi-qr-dim-800x800-jpg",
+      "featureTitle": "Replace the currently used UPI QR static asset with the newly uploaded QR image, while keeping the frontend code and path unchanged so the app continues to load the QR from `UPI_QR_IMAGE_PATH` (`/assets/generated/upi-qr.dim_800x800.jpg`) as used by `frontend/src/utils/upiQrImage.ts` and rendered in `frontend/src/components/donate/UpiPaymentSection.tsx`. Store the replacement file at `frontend/public/assets/generated/upi-qr.dim_800x800.jpg`.",
+      "files": [],
       "components": [
         "authorization@4.0.0",
         "core-infrastructure@1.0.2",
@@ -19,28 +14,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-18"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-the-site-uses-only-the-single-user-uploaded-donations-photo-with-the-why-not-us-logo-as-its-image-asset-across-the-ui-remove-replace-any-references-to-other-generated-or-placeholder-images-for-example-the-current-dashboard-hero-image-at-assets-generated-trust-hero-dim-1600x600-png-so-that-no-other-images-are-used",
-      "featureTitle": "Ensure the site uses ONLY the single user-uploaded donations photo with the “Why Not Us” logo as its image asset across the UI. Remove/replace any references to other generated or placeholder images (for example, the current dashboard hero image at \"/assets/generated/trust-hero.dim_1600x600.png\") so that no other images are used.",
-      "files": [
-        "frontend/src/components/layout/SiteHeader.tsx",
-        "frontend/src/pages/DashboardPage.tsx",
-        "frontend/src/utils/approvedImage.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-19"
+        "REQ-59"
       ],
       "confidence": "high"
     }

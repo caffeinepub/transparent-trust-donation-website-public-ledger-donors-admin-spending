@@ -1,29 +1,18 @@
-import AdminGuard from '@/components/auth/AdminGuard';
 import { useGetDonations, useConfirmDonation, useDeclineDonation } from '@/hooks/useQueries';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Check, X, TrendingUp } from 'lucide-react';
+import { Check, X, TrendingUp, Copy } from 'lucide-react';
 import { toast } from 'sonner';
-import { Link } from '@tanstack/react-router';
+import { formatINR } from '@/utils/formatCurrency';
+import { useState } from 'react';
 
 export default function AdminDonationsPage() {
-  return (
-    <AdminGuard>
-      <AdminDonationsContent />
-    </AdminGuard>
-  );
-}
-
-function AdminDonationsContent() {
   const { data: donations = [], isLoading } = useGetDonations(100, 0);
   const confirmMutation = useConfirmDonation();
   const declineMutation = useDeclineDonation();
-
-  const formatCurrency = (amount: bigint) => {
-    return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
+  const [copiedUtr, setCopiedUtr] = useState<string | null>(null);
 
   const formatDate = (timestamp: bigint) => {
     const date = new Date(Number(timestamp) / 1000000);
@@ -31,7 +20,20 @@ function AdminDonationsContent() {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     });
+  };
+
+  const handleCopyUtr = async (utr: string) => {
+    try {
+      await navigator.clipboard.writeText(utr);
+      setCopiedUtr(utr);
+      toast.success('UTR copied to clipboard');
+      setTimeout(() => setCopiedUtr(null), 2000);
+    } catch (error) {
+      toast.error('Failed to copy UTR');
+    }
   };
 
   const handleConfirm = async (donationId: string) => {
@@ -69,17 +71,10 @@ function AdminDonationsContent() {
   return (
     <div className="container py-12">
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">Admin: Donation Management</h1>
-            <p className="text-muted-foreground">
-              Review and confirm incoming donations.
-            </p>
-          </div>
-          <Link to="/admin/spending">
-            <Button variant="outline">Manage Spending</Button>
-          </Link>
-        </div>
+        <h1 className="text-3xl font-bold mb-2">Donation Management</h1>
+        <p className="text-muted-foreground">
+          Review and verify UPI payments before confirming donations.
+        </p>
       </div>
 
       <div className="grid gap-8 md:grid-cols-2">
@@ -94,7 +89,7 @@ function AdminDonationsContent() {
             {isLoading ? (
               <div className="space-y-3">
                 {[...Array(3)].map((_, i) => (
-                  <Skeleton key={i} className="h-24 w-full" />
+                  <Skeleton key={i} className="h-32 w-full" />
                 ))}
               </div>
             ) : pendingDonations.length === 0 ? (
@@ -104,13 +99,13 @@ function AdminDonationsContent() {
                 {pendingDonations.map((donation) => (
                   <div 
                     key={donation.id}
-                    className="p-4 rounded-lg border border-border"
+                    className="p-4 rounded-lg border border-border bg-card"
                   >
                     <div className="flex items-start justify-between mb-2">
                       <div>
-                        <p className="font-medium text-lg">{formatCurrency(donation.amount)}</p>
+                        <p className="font-medium text-lg">{formatINR(donation.amount)}</p>
                         <p className="text-sm text-muted-foreground">
-                          Donor: {donation.donorId}
+                          Donor: {donation.donorId.substring(0, 20)}...
                         </p>
                         <p className="text-xs text-muted-foreground mt-1">
                           {formatDate(donation.timestamp)}
@@ -119,8 +114,29 @@ function AdminDonationsContent() {
                       {getStatusBadge(donation.status)}
                     </div>
                     {donation.description && (
-                      <p className="text-sm mb-3">{donation.description}</p>
+                      <p className="text-sm mb-3 italic">"{donation.description}"</p>
                     )}
+                    
+                    {/* UPI Transaction Details */}
+                    <div className="bg-muted/50 rounded p-3 mb-3 space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs font-medium text-muted-foreground">UTR:</span>
+                        <div className="flex items-center gap-2">
+                          <code className="text-xs font-mono bg-background px-2 py-1 rounded">
+                            {donation.utr}
+                          </code>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleCopyUtr(donation.utr)}
+                            className="h-6 w-6 p-0"
+                          >
+                            <Copy className={`h-3 w-3 ${copiedUtr === donation.utr ? 'text-green-600' : ''}`} />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+
                     <div className="flex gap-2">
                       <Button
                         size="sm"
@@ -128,7 +144,7 @@ function AdminDonationsContent() {
                         disabled={confirmMutation.isPending}
                         className="flex-1"
                       >
-                        <Check className="h-4 w-4 mr-1" />
+                        <Check className="mr-1 h-4 w-4" />
                         Confirm
                       </Button>
                       <Button
@@ -138,7 +154,7 @@ function AdminDonationsContent() {
                         disabled={declineMutation.isPending}
                         className="flex-1"
                       >
-                        <X className="h-4 w-4 mr-1" />
+                        <X className="mr-1 h-4 w-4" />
                         Decline
                       </Button>
                     </div>
@@ -157,27 +173,31 @@ function AdminDonationsContent() {
             {isLoading ? (
               <div className="space-y-3">
                 {[...Array(5)].map((_, i) => (
-                  <Skeleton key={i} className="h-16 w-full" />
+                  <Skeleton key={i} className="h-20 w-full" />
                 ))}
               </div>
             ) : recentDonations.length === 0 ? (
               <p className="text-muted-foreground text-center py-8">No donations yet.</p>
             ) : (
-              <div className="space-y-3 max-h-[600px] overflow-y-auto">
+              <div className="space-y-3">
                 {recentDonations.map((donation) => (
                   <div 
                     key={donation.id}
-                    className="p-4 rounded-lg border border-border"
+                    className="p-3 rounded-lg border border-border bg-card"
                   >
-                    <div className="flex items-start justify-between mb-2">
-                      <p className="font-medium">{formatCurrency(donation.amount)}</p>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium">{formatINR(donation.amount)}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatDate(donation.timestamp)}
+                        </p>
+                      </div>
                       {getStatusBadge(donation.status)}
                     </div>
-                    <p className="text-sm text-muted-foreground">
-                      {formatDate(donation.timestamp)} • {donation.donorId}
-                    </p>
                     {donation.description && (
-                      <p className="text-sm mt-1">{donation.description}</p>
+                      <p className="text-xs mt-2 text-muted-foreground italic">
+                        "{donation.description}"
+                      </p>
                     )}
                   </div>
                 ))}

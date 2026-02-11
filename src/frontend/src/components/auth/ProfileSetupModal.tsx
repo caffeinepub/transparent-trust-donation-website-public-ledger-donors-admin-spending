@@ -21,10 +21,20 @@ export default function ProfileSetupModal() {
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phone, setPhone] = useState('+91');
 
   const isAuthenticated = !!identity;
   const showProfileSetup = isAuthenticated && !profileLoading && isFetched && userProfile === null;
+
+  const validatePhone = (phoneValue: string): boolean => {
+    if (phoneValue === '+91' || phoneValue.trim() === '') return true; // Allow empty for optional
+    if (phoneValue.length !== 13) return false;
+    if (!phoneValue.startsWith('+91')) return false;
+    
+    const digits = phoneValue.substring(3);
+    if (digits[0] < '6' || digits[0] > '9') return false;
+    return /^\d{10}$/.test(digits);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,11 +44,17 @@ export default function ProfileSetupModal() {
       return;
     }
 
+    // Validate phone if provided
+    if (phone && phone !== '+91' && !validatePhone(phone)) {
+      toast.error('Please enter a valid 10-digit Indian mobile number with +91 country code');
+      return;
+    }
+
     try {
       await saveProfile.mutateAsync({
         name: name.trim(),
         email: email.trim() || undefined,
-        phone: phone.trim() || undefined,
+        phone: (phone && phone !== '+91') ? phone.trim() : undefined,
       });
       toast.success('Profile created successfully!');
     } catch (error) {
@@ -53,7 +69,7 @@ export default function ProfileSetupModal() {
         <DialogHeader>
           <DialogTitle>Welcome! Set up your profile</DialogTitle>
           <DialogDescription>
-            Please provide your name so we can personalize your experience and link your donations.
+            Please provide your name to personalize your experience. Mobile number is required for making donations.
           </DialogDescription>
         </DialogHeader>
         
@@ -81,14 +97,18 @@ export default function ProfileSetupModal() {
           </div>
           
           <div className="space-y-2">
-            <Label htmlFor="phone">Phone (optional)</Label>
+            <Label htmlFor="phone">Mobile Number (optional, but required for donations)</Label>
             <Input
               id="phone"
               type="tel"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1 (555) 000-0000"
+              placeholder="+91 9876543210"
+              className={phone !== '+91' && validatePhone(phone) ? 'border-green-500' : ''}
             />
+            <p className="text-xs text-muted-foreground">
+              You can add this later, but it's required to make donations
+            </p>
           </div>
           
           <Button 

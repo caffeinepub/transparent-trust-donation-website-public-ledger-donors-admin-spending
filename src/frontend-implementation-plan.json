@@ -1,62 +1,22 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Donor phone privacy in UI + single approved image across site",
+  "title": "Replace UPI QR static asset with newly uploaded image",
   "requirements": [
     {
-      "id": "REQ-18",
-      "summary": "Show masked donor phone numbers to non-admin users and full phone numbers only to admins across donor views.",
+      "id": "REQ-59",
+      "summary": "Replace the existing UPI QR static asset file while keeping the same public path and all frontend references unchanged.",
       "acceptanceCriteria": [
-        "On the Donor Detail page, non-admin users see a masked phone number (e.g., \"98765******\") and admins see the full phone number.",
-        "No UI path shows an unmasked phone number to non-admin users (including loading/empty states and any table/detail views).",
-        "All user-facing text remains in English."
+        "`frontend/public/assets/generated/upi-qr.dim_800x800.jpg` is replaced with the newly uploaded QR image and is included in the deployed frontend build.",
+        "No code changes are required to reference the QR image; `frontend/src/utils/upiQrImage.ts` still exports `'/assets/generated/upi-qr.dim_800x800.jpg'`.",
+        "On the Donate flow, the QR image renders successfully in the UPI payment section without triggering the QR load error state.",
+        "Clicking “Open QR Full Size” opens the same updated QR image in a new tab."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/utils/phoneMask.ts",
-          "operation": "create",
-          "description": "Add a small helper to convert a phone string into a masked representation (visible prefix + asterisks) for UI-safe display when the backend provides a full phone value. Use this as a defensive fallback to ensure non-admin views never render an unmasked phone number."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
+          "path": "frontend/public/assets/generated/upi-qr.dim_800x800.jpg",
           "operation": "modify",
-          "description": "Add React Query hooks to fetch donor public profiles (list + detail) using the existing backend capabilities in frontend/src/backend.d.ts (getDonorPublicProfiles, getDonorPublicProfile). Ensure hooks support an enabled flag so pages can safely select admin vs public data without conditional hook calls."
-        },
-        {
-          "path": "frontend/src/pages/DonorsPage.tsx",
-          "operation": "modify",
-          "description": "Use the authorization component’s admin capability (via the existing useAdminStatus hook) to decide whether to show admin donor data or public donor data. Fetch donor profiles via the new public-profile hooks for non-admin users, and via existing admin-profile hooks for admins. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/pages/DonorDetailPage.tsx",
-          "operation": "modify",
-          "description": "Use the authorization component’s admin capability (via the existing useAdminStatus hook) to fetch and render the correct donor profile shape: admin uses full donor profile; non-admin uses donor public profile with maskedPhone. Ensure the Phone row renders only a masked value for non-admins (prefer maskedPhone; otherwise mask defensively using the new helper). Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-19",
-      "summary": "Replace all non-approved images with the single uploaded donations photo and remove references to generated/placeholder images.",
-      "acceptanceCriteria": [
-        "The dashboard hero image no longer loads \"/assets/generated/trust-hero.dim_1600x600.png\" (or any other non-approved image), and instead uses the single uploaded donations photo asset.",
-        "No other pages/components reference additional generated images; the application visually uses only the uploaded donations photo asset wherever an image is rendered.",
-        "No new images are generated or added as part of this change."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/utils/approvedImage.ts",
-          "operation": "create",
-          "description": "Define a single source of truth for the approved image path to the uploaded donations photo asset (use the existing file name: \"/assets/WhatsApp Image 2026-02-11 at 05.29.02.jpeg\"). This helps ensure all UI images reference only the approved asset."
-        },
-        {
-          "path": "frontend/src/pages/DashboardPage.tsx",
-          "operation": "modify",
-          "description": "Replace the hero <img> src that currently references /assets/generated/trust-hero.dim_1600x600.png to instead use the approved uploaded donations photo (via the new approvedImage utility). Ensure no other image assets are introduced."
-        },
-        {
-          "path": "frontend/src/components/layout/SiteHeader.tsx",
-          "operation": "modify",
-          "description": "Replace the header logo image that currently references /assets/generated/trust-logo.dim_512x512.png to instead use the approved uploaded donations photo (via the new approvedImage utility). Ensure this is the only image rendered by the header."
+          "description": "Replace the existing static asset with the newly uploaded UPI QR image, keeping the exact filename and location so `UPI_QR_IMAGE_PATH` (`/assets/generated/upi-qr.dim_800x800.jpg`) continues to work without any code changes."
         }
       ]
     }
