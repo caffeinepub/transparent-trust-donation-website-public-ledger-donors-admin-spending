@@ -12,6 +12,7 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from '@tanstack/react-router';
 import SpendingBreakdownCard from '@/components/ledger/SpendingBreakdownCard';
 import RecentTransactionsList from '@/components/ledger/RecentTransactionsList';
+import { APPROVED_IMAGE_PATH } from '@/utils/approvedImage';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -60,9 +61,9 @@ export default function DashboardPage() {
             </div>
             <div className="relative">
               <img 
-                src="/assets/generated/trust-hero.dim_1600x600.png" 
-                alt="Community Support" 
-                className="w-full h-auto rounded-lg shadow-xl"
+                src={APPROVED_IMAGE_PATH}
+                alt="Why Not Us - Making a Difference" 
+                className="rounded-2xl shadow-2xl w-full h-auto object-cover"
               />
             </div>
           </div>
@@ -74,17 +75,17 @@ export default function DashboardPage() {
         <div className="grid gap-6 md:grid-cols-3">
           <Card>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
+              <CardTitle className="text-sm font-medium">Trust Balance</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               {balanceLoading ? (
                 <Skeleton className="h-8 w-32" />
               ) : (
-                <div className="text-3xl font-bold">{formatCurrency(balance)}</div>
+                <div className="text-2xl font-bold">{formatCurrency(balance)}</div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                Available for community support
+                Available funds for community support
               </p>
             </CardContent>
           </Card>
@@ -98,10 +99,10 @@ export default function DashboardPage() {
               {donationsLoading ? (
                 <Skeleton className="h-8 w-32" />
               ) : (
-                <div className="text-3xl font-bold text-chart-1">{formatCurrency(totalDonations)}</div>
+                <div className="text-2xl font-bold">{formatCurrency(totalDonations)}</div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                Confirmed contributions
+                Confirmed contributions received
               </p>
             </CardContent>
           </Card>
@@ -115,27 +116,25 @@ export default function DashboardPage() {
               {spendingLoading ? (
                 <Skeleton className="h-8 w-32" />
               ) : (
-                <div className="text-3xl font-bold text-chart-2">{formatCurrency(totalSpending)}</div>
+                <div className="text-2xl font-bold">{formatCurrency(totalSpending)}</div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
-                Invested in community
+                Funds distributed to beneficiaries
               </p>
             </CardContent>
           </Card>
         </div>
       </section>
 
-      {/* Spending Breakdown */}
+      {/* Charts and Activity Section */}
       <section className="container pb-12">
-        <SpendingBreakdownCard spendingRecords={recentSpending} />
-      </section>
-
-      {/* Recent Activity */}
-      <section className="container pb-16">
-        <RecentTransactionsList 
-          donations={recentDonations} 
-          spending={recentSpending} 
-        />
+        <div className="grid gap-6 md:grid-cols-2">
+          <SpendingBreakdownCard spendingRecords={recentSpending} />
+          <RecentTransactionsList 
+            donations={recentDonations} 
+            spending={recentSpending} 
+          />
+        </div>
       </section>
     </div>
   );

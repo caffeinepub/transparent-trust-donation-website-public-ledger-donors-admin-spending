@@ -1,212 +1,85 @@
 {
   "kind": "build_request",
-  "title": "Transparent Trust Donation Website (Public Ledger, Donors, Admin Spending)",
-  "priority": "normal",
+  "title": "Hide donor phone numbers for non-admin users and restrict site to the single uploaded image",
+  "priority": "high",
   "requirements": [
     {
-      "id": "REQ-1",
-      "text": "Implement persistent backend data models and APIs for a transparent trust ledger that stores: (a) donor profiles (at minimum: display name, optional contact fields, principal if signed in), (b) incoming donations, (c) outgoing spending/usage records, and (d) a computed trust balance derived from all records.",
+      "id": "REQ-17",
+      "text": "Enforce donor phone-number privacy at the backend API level: when returning donor profiles to non-admin callers, do not expose the full phone number. Only admin callers may receive the full donor phone number; all other callers must receive a masked value (e.g., \"98765******\") or an equivalent representation that does not reveal the hidden digits.",
       "target": "backend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4"
         ],
         "quotes": [
-          "It should show all the transactions amount to the people , that how much amount does my trust have and in what ways the amont is used and the details of each of the member who gave their funds to my trust ."
+          "Donor phone numbers MUST be hidden for normal users. Only you, the host/admin, should see the full number. Other users should see something like 98765******."
         ]
       },
       "acceptanceCriteria": [
-        "Backend can create and list donors.",
-        "Backend can create and list incoming donation transactions with amount, timestamp, and an optional note/reference.",
-        "Backend can create and list outgoing spending transactions with amount, timestamp, category/purpose, and a description.",
-        "Backend exposes a query method that returns the current trust balance computed from all incoming minus outgoing transactions.",
-        "All ledger data persists across canister upgrades using stable storage patterns (no data loss on upgrade)."
+        "When a non-admin user (including anonymous/public users) calls the donor-profile read APIs, any donor phone number returned is masked and does not contain the original full number.",
+        "When an admin user calls the same donor-profile read APIs, the full phone number is returned unchanged (when present).",
+        "Masking behavior matches the example format expectation (visible prefix + asterisks), and does not accidentally reveal the hidden digits."
       ]
     },
     {
-      "id": "REQ-2",
-      "text": "Add admin authorization to restrict who can create/edit outgoing spending/usage records and (if applicable) manage donor records; admin access must be based on Internet Identity principal allowlisting stored in canister state.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "spend it a useful manner . It should be useful for the poor people , orphan children etc."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Only allowlisted admin principals can create outgoing spending transactions.",
-        "Non-admin users can view public data but cannot create outgoing spending records.",
-        "There is a safe initial admin setup mechanism (e.g., first-run initialization or a controlled method callable only when no admins exist).",
-        "Unauthorized calls return clear errors and do not modify state."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Create a public Transparency Dashboard UI that shows: total funds (current balance), totals in/out, recent transactions, and breakdown of outgoing spending by category/purpose.",
+      "id": "REQ-18",
+      "text": "Update the frontend donor views to display masked phone numbers for non-admin viewers and full phone numbers only for admins, including the donor detail page where the phone number is currently rendered.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4"
         ],
         "quotes": [
-          "It should show all the transactions amount to the people , that how much amount does my trust have and in what ways the amont is used"
+          "Donor phone numbers MUST be hidden for normal users. Only you, the host/admin, should see the full number. Other users should see something like 98765******."
         ]
       },
       "acceptanceCriteria": [
-        "A public page displays current balance, total incoming, and total outgoing.",
-        "A public section shows a spending breakdown grouped by category/purpose.",
-        "Recent transactions list is visible without sign-in.",
-        "UI handles empty-state gracefully (e.g., no transactions yet)."
+        "On the Donor Detail page, non-admin users see a masked phone number (e.g., \"98765******\") and admins see the full phone number.",
+        "No UI path shows an unmasked phone number to non-admin users (including loading/empty states and any table/detail views).",
+        "All user-facing text remains in English."
       ]
     },
     {
-      "id": "REQ-4",
-      "text": "Create a public Transaction Ledger UI that lists all incoming and outgoing transactions with filtering (incoming/outgoing/category) and sorting (newest/oldest), and supports viewing a transaction’s full details.",
+      "id": "REQ-19",
+      "text": "Ensure the site uses ONLY the single user-uploaded donations photo with the “Why Not Us” logo as its image asset across the UI. Remove/replace any references to other generated or placeholder images (for example, the current dashboard hero image at \"/assets/generated/trust-hero.dim_1600x600.png\") so that no other images are used.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-1"
+          "msg-4"
         ],
         "quotes": [
-          "It should show all the transactions amount to the people"
+          "Use ONLY the image you uploaded (the donations photo with the Why Not Us logo)."
         ]
       },
       "acceptanceCriteria": [
-        "Users can view a unified ledger of all transactions.",
-        "Users can filter by transaction type (incoming vs outgoing).",
-        "Users can filter outgoing transactions by category/purpose.",
-        "Users can open a transaction detail view showing all stored fields (amount, timestamp, description/note, reference)."
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "text": "Create a public Donor/Member Listing UI that shows each contributor’s details and contribution totals, with a donor detail view showing the donor’s contribution history.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "the details of each of the member who gave their funds to my trust"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Public donors list loads from the backend and displays donors with their total contributed amount.",
-        "Donor detail view shows the donor’s incoming donation transactions.",
-        "Sensitive fields (if collected) can be omitted from public view; only explicitly public fields are displayed.",
-        "UI supports donors with no name by showing a safe fallback label (e.g., 'Anonymous')."
-      ]
-    },
-    {
-      "id": "REQ-6",
-      "text": "Add a Donation flow that allows supporters worldwide to contribute and have the contribution recorded on the public ledger, including a donor identity option (signed-in via Internet Identity) and an anonymous option.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "collect money from the pople",
-          "My wish is to spread my website all over the world and collect more fund from the pople ."
-        ]
-      },
-      "acceptanceCriteria": [
-        "Supporters can submit a donation record with amount and optional note.",
-        "If signed in, the donation is associated with the user’s principal and can appear under their donor profile.",
-        "If not signed in, the donation can be recorded as anonymous (no principal required).",
-        "Donation submissions appear in the public ledger after successful submission.",
-        "UI validates amount input and prevents negative/invalid values."
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "text": "Add an Admin Management UI for authorized admins to create outgoing spending/usage records (purpose/category, amount, description, date/time, optional attachment/reference text) and (optionally) correct mistakes via a clear audit-friendly approach.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "spend it a useful manner"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Admin-only page is not accessible to non-admin users (guarded in UI and enforced by backend).",
-        "Admin can create an outgoing spending record and see it immediately in the public dashboard/ledger.",
-        "Spending creation form includes category/purpose, amount, and description as required fields.",
-        "System prevents spending that would make computed balance negative (or clearly blocks with an error)."
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "text": "Ensure the website is designed and implemented to operate indefinitely (no built-in expiration/time period logic) and is publicly accessible without requiring login for viewing transparency information.",
-      "target": "both",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ],
-        "quotes": [
-          "This website should not have any time period ."
-        ]
-      },
-      "acceptanceCriteria": [
-        "No UI or backend logic disables the app after a date/time.",
-        "All transparency pages (dashboard, ledger, donors list) are accessible without authentication.",
-        "Authentication is only required for admin actions and (optionally) to link a donation to a specific user identity."
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "text": "Apply a coherent, distinctive visual theme across the site (colors, typography, spacing, component styling) suitable for a global charitable trust transparency platform, avoiding default-looking template styling.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ]
-      },
-      "acceptanceCriteria": [
-        "All main pages share a consistent layout system (header/nav, content width, typography scale).",
-        "Theme is consistent across buttons, tables/lists, forms, and cards.",
-        "Design uses a clear, readable palette (not blue+purple by default) and meets basic accessibility for contrast and readability."
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "text": "Generate and include required static images (logo and a simple hero illustration) and render them as static assets from frontend/public/assets/generated (not served via the backend).",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-1"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Generated images exist under frontend/public/assets/generated and are referenced by the UI.",
-        "Header uses the generated logo asset.",
-        "Homepage/dashboard includes the hero illustration asset in a visually coherent way.",
-        "Build runs without missing-asset errors."
+        "The dashboard hero image no longer loads \"/assets/generated/trust-hero.dim_1600x600.png\" (or any other non-approved image), and instead uses the single uploaded donations photo asset.",
+        "No other pages/components reference additional generated images; the application visually uses only the uploaded donations photo asset wherever an image is rendered.",
+        "No new images are generated or added as part of this change."
       ]
     }
   ],
   "constraints": [
-    "Backend must remain a single Motoko actor with all logic in the main backend file (no multi-canister backend architecture).",
-    "Do not edit files under frontend/src/components/ui; compose them instead.",
-    "Do not edit immutable hook/bootstrapping paths listed by the system (e.g., Internet Identity hooks and main entry); integrate via new components/pages and existing public APIs.",
-    "No third-party authentication providers; only Internet Identity for sign-in.",
-    "No external databases or non-IC backend services."
+    "Backend must remain a single-actor Motoko canister; implement the change in backend/main.mo and add backend/migration.mo only if persistent state schema changes are required.",
+    "Do not edit frontend immutable paths: frontend/src/hooks/useInternetIdentity.ts, frontend/src/hooks/useInternetIdentity.tsx, frontend/src/hooks/useActor.ts, frontend/src/main.tsx, frontend/src/components/ui (compose instead).",
+    "Do not generate or introduce any new image assets; use only the existing user-uploaded donations photo with the “Why Not Us” logo."
   ],
   "nonGoals": [
-    "Integrating non-IC crypto wallets such as MetaMask/WalletConnect.",
-    "Real-time chat, push notifications, email/SMS messaging.",
-    "Complex multi-organization workflows (multiple trusts) unless explicitly requested.",
-    "Automated KYC/identity verification beyond Internet Identity principal-based sign-in."
+    "Do not add new authentication methods beyond Internet Identity.",
+    "Do not implement WhatsApp/email donor notifications.",
+    "Do not redesign pages beyond what is required to (1) enforce phone masking privacy and (2) remove usage of non-approved images."
   ],
   "imageRequirements": {
-    "required": [
-      "Minimal modern charity trust logo mark, flat vector style, transparent background (trust-logo.dim_512x512.png)",
-      "Warm, inclusive hero illustration showing community support/charity concept, flat illustration, no text, wide banner (trust-hero.dim_1600x600.png)"
-    ],
+    "required": [],
     "edits": []
+  },
+  "userProfileUpdate": {
+    "goalsToAdd": [],
+    "goalsToRemove": [],
+    "preferencesToAdd": [],
+    "preferencesToRemove": [],
+    "miscToAdd": [],
+    "miscToRemove": [],
+    "fieldsToSet": {},
+    "fieldsToDelete": []
   }
 }

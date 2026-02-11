@@ -1,11 +1,19 @@
 {
   "schemaVersion": "1.0.0",
-  "projectStateVersion": 3,
+  "projectStateVersion": 9,
   "summary": "Build a transparent, globally accessible trust donation website to collect funds indefinitely and publicly show total funds, all transactions, usage of funds, and donor/member contribution details.",
-  "architectural_notes": [],
-  "known_issues": [],
-  "isFixRequest": false,
-  "imageRequirements": "## Required Images\n- Minimal modern charity trust logo mark, flat vector style, transparent background (trust-logo.dim_512x512.png)\n- Warm, inclusive hero illustration showing community support/charity concept, flat illustration, no text, wide banner (trust-hero.dim_1600x600.png)",
+  "architectural_notes": [
+    "Trust/organization name set to: \"Why Not Us ?\"",
+    "Do not generate new branding images; use only the user-supplied trust image as the site’s primary visual asset.",
+    "All currency amounts should be formatted and displayed in INR (₹).",
+    "Add a mechanism to track and display Total Views and Live Viewers on the public site header (requires defining how views/live viewers are measured and stored).",
+    "Donation confirmation notifications via WhatsApp/email require external messaging integration and enabled email capability; treat as a separate dependency-gated feature.",
+    "Donor phone number privacy rule: only host/admin can view full number; for other users display a masked number like 98765****** (show first 5 digits, mask the remaining digits)."
+  ],
+  "known_issues": [
+    "Automated build/implementation attempts for requirements 1–4 failed multiple times (\"AI couldn't implement\")—may require simplifying scope or breaking into smaller tasks."
+  ],
+  "isFixRequest": true,
   "existing_features": [
     {
       "id": "feature-add-admin-authorization-to-restrict-who-can-create-edit-outgoing-spending-usage-records-and-if-applicable-manage-donor-records-admin-access-must-be-based-on-internet-identity-principal-allowlisting-stored-in-canister-state",
@@ -78,6 +86,62 @@
         "REQ-10"
       ],
       "version": 1
+    },
+    {
+      "id": "feature-update-all-user-visible-branding-text-that-currently-names-the-trust-as-hope-trust-to-instead-display-the-trust-name-exactly-as-why-not-us",
+      "title": "Update all user-visible branding text that currently names the trust as “Hope Trust” to instead display the trust name exactly as: “Why Not Us ?”.",
+      "reqIds": [
+        "REQ-11"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-html-document-title-to-use-the-trust-name-why-not-us-so-the-browser-tab-reflects-the-new-trust-branding",
+      "title": "Update the HTML document title to use the trust name “Why Not Us ?” so the browser tab reflects the new trust branding.",
+      "reqIds": [
+        "REQ-12"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-any-non-ui-default-identifiers-derived-from-the-old-trust-name-e-g-fallback-strings-used-when-window-location-hostname-is-unavailable-to-align-with-why-not-us-branding",
+      "title": "Update any non-UI default identifiers derived from the old trust name (e.g., fallback strings used when window.location.hostname is unavailable) to align with “Why Not Us ?” branding.",
+      "reqIds": [
+        "REQ-13"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-a-ui-element-at-the-top-of-the-website-in-the-sticky-header-area-that-displays-total-views-and-live-viewers-and-keep-the-live-viewers-value-updated-while-the-page-is-open",
+      "title": "Add a UI element at the top of the website (in the sticky header area) that displays Total Views and Live Viewers, and keep the Live Viewers value updated while the page is open.",
+      "reqIds": [
+        "REQ-15"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-add-react-query-hooks-and-any-required-frontend-types-for-the-new-view-metrics-endpoints-and-reuse-them-in-the-header-component",
+      "title": "Add React Query hooks (and any required frontend types) for the new view metrics endpoints and reuse them in the header component.",
+      "reqIds": [
+        "REQ-16"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-update-the-frontend-donor-views-to-display-masked-phone-numbers-for-non-admin-viewers-and-full-phone-numbers-only-for-admins-including-the-donor-detail-page-where-the-phone-number-is-currently-rendered",
+      "title": "Update the frontend donor views to display masked phone numbers for non-admin viewers and full phone numbers only for admins, including the donor detail page where the phone number is currently rendered.",
+      "reqIds": [
+        "REQ-18"
+      ],
+      "version": 1
+    },
+    {
+      "id": "feature-ensure-the-site-uses-only-the-single-user-uploaded-donations-photo-with-the-why-not-us-logo-as-its-image-asset-across-the-ui-remove-replace-any-references-to-other-generated-or-placeholder-images-for-example-the-current-dashboard-hero-image-at-assets-generated-trust-hero-dim-1600x600-png-so-that-no-other-images-are-used",
+      "title": "Ensure the site uses ONLY the single user-uploaded donations photo with the “Why Not Us” logo as its image asset across the UI. Remove/replace any references to other generated or placeholder images (for example, the current dashboard hero image at \"/assets/generated/trust-hero.dim_1600x600.png\") so that no other images are used.",
+      "reqIds": [
+        "REQ-19"
+      ],
+      "version": 1
     }
   ],
   "new_feature_requests": [
@@ -124,10 +188,56 @@
         "REQ-1"
       ],
       "status": "pending"
+    },
+    {
+      "id": "AR-8",
+      "summary": "Use only the user-provided trust image asset across the site; do not generate or use any other images.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-9",
+      "summary": "Display all monetary amounts in Indian Rupees (₹) instead of dollars.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-10",
+      "summary": "Restrict donor contact number visibility: host/admin can view full number; other logged-in users see a masked number with last 4 digits hidden.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-11",
+      "summary": "Show Total Views and Live Viewers count at the top of the website.",
+      "reqIds": [],
+      "status": "pending"
+    },
+    {
+      "id": "AR-12",
+      "summary": "Post-donation donor notifications: send WhatsApp message and email (if provided) thanking donor and including donated amount, with the trust image attached.",
+      "reqIds": [],
+      "status": "blocked"
+    },
+    {
+      "id": "AR-13",
+      "summary": "Implement backend support for tracking (a) total site views and (b) currently live viewers, and expose a public API to fetch these metrics.",
+      "reqIds": [
+        "REQ-14"
+      ],
+      "status": "pending"
+    },
+    {
+      "id": "AR-14",
+      "summary": "Enforce donor phone-number privacy at the backend API level: when returning donor profiles to non-admin callers, do not expose the full phone number. Only admin callers may receive the full donor phone number; all other callers must receive a masked value (e.g., \"98765******\") or an equivalent representation that does not reveal the hidden digits.",
+      "reqIds": [
+        "REQ-17"
+      ],
+      "status": "pending"
     }
   ],
   "gameProjectType": "none",
-  "projectName": "Transparent Trust Donation Website (Public Ledger, Donors, Admin Spending)",
+  "projectName": "Why Not Us ?",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

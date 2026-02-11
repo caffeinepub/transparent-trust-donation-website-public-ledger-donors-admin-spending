@@ -16,6 +16,15 @@ export interface DonationInput {
     amount: bigint;
 }
 export type Time = bigint;
+export interface DonorPublicProfile {
+    id: string;
+    principal?: Principal;
+    maskedPhone?: string;
+    displayName: string;
+    joinedTimestamp: Time;
+    email?: string;
+    totalDonated: bigint;
+}
 export interface Record_ {
     id: string;
     description: string;
@@ -30,7 +39,7 @@ export interface Record__1 {
     timestamp: Time;
     amount: bigint;
 }
-export interface Profile {
+export interface DonorProfile {
     id: string;
     principal?: Principal;
     displayName: string;
@@ -43,6 +52,10 @@ export interface UserProfile {
     name: string;
     email?: string;
     phone?: string;
+}
+export interface Metrics {
+    totalSiteViews: bigint;
+    currentLiveViewers: bigint;
 }
 export enum Status {
     pending = "pending",
@@ -65,15 +78,21 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getDonations(limit: bigint, offset: bigint): Promise<Array<Record__1>>;
     getDonorDonations(donorId: string): Promise<Array<Record__1>>;
-    getDonorProfile(donorId: string): Promise<Profile | null>;
-    getDonorProfiles(): Promise<Array<Profile>>;
+    getDonorProfile(donorId: string): Promise<DonorProfile | null>;
+    getDonorProfiles(): Promise<Array<DonorProfile>>;
+    getDonorPublicProfile(donorId: string): Promise<DonorPublicProfile | null>;
+    getDonorPublicProfiles(): Promise<Array<DonorPublicProfile>>;
+    getSiteMetrics(): Promise<Metrics>;
     getSpendingRecords(limit: bigint, offset: bigint): Promise<Array<Record_>>;
     getTotalDonations(): Promise<bigint>;
     getTotalSpending(): Promise<bigint>;
     getTrustBalance(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    incrementSiteViews(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     updateDonorProfileAdmin(donorId: string, displayName: string, email: string | null, phone: string | null): Promise<void>;
     updateSpendingRecord(id: string, amount: bigint, description: string): Promise<void>;
+    viewerConnected(): Promise<void>;
+    viewerDisconnected(): Promise<void>;
 }

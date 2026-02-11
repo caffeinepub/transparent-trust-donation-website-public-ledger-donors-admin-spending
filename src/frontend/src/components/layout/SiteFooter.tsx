@@ -2,14 +2,14 @@ import { Heart } from 'lucide-react';
 
 export default function SiteFooter() {
   const currentYear = new Date().getFullYear();
-  const appIdentifier = encodeURIComponent(window.location.hostname || 'hope-trust');
+  const appIdentifier = encodeURIComponent(window.location.hostname || 'why-not-us');
 
   return (
     <footer className="border-t border-border/40 bg-muted/30 mt-auto">
       <div className="container py-8">
         <div className="flex flex-col md:flex-row justify-between items-center gap-4">
           <div className="text-sm text-muted-foreground text-center md:text-left">
-            <p>© {currentYear} Hope Trust. All rights reserved.</p>
+            <p>© {currentYear} Why Not Us ? All rights reserved.</p>
             <p className="mt-1">Empowering communities through transparent giving.</p>
           </div>
           

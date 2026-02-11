@@ -10,7 +10,10 @@ import Time "mo:core/Time";
 import Order "mo:core/Order";
 import MixinAuthorization "authorization/MixinAuthorization";
 import AccessControl "authorization/access-control";
+import Migration "migration";
+import Char "mo:core/Char";
 
+(with migration = Migration.run)
 actor {
   let accessControlState = AccessControl.initState();
   include MixinAuthorization(accessControlState);
@@ -37,7 +40,18 @@ actor {
       id : Text;
       displayName : Text;
       email : ?Text;
-      phone : ?Text;
+      phone : ?Text; // Store actual phone data persistently
+      principal : ?Principal;
+      joinedTimestamp : Time.Time;
+      totalDonated : Nat;
+    };
+
+    // Record for non-admin callers with masked phone field
+    public type PublicProfile = {
+      id : Text;
+      displayName : Text;
+      email : ?Text;
+      maskedPhone : ?Text; // Masked phone for non-admin return
       principal : ?Principal;
       joinedTimestamp : Time.Time;
       totalDonated : Nat;
@@ -63,6 +77,7 @@ actor {
   public type SpendingRecord = Spending.Record;
   public type DonorProfile = Donor.Profile;
   public type DonationRecord = Donation.Record;
+  public type DonorPublicProfile = Donor.PublicProfile;
 
   var donations = List.empty<Donation.Record>();
   var spendingRecords = List.empty<Spending.Record>();
@@ -70,6 +85,15 @@ actor {
   let userProfiles = Map.empty<Principal, UserProfile>();
   var nextDonationId : Nat = 0;
   var nextSpendingId : Nat = 0;
+
+  // Site Metrics
+  var totalSiteViews = 0 : Nat;
+  var currentLiveViewers = 0 : Nat;
+
+  type Metrics = {
+    totalSiteViews : Nat;
+    currentLiveViewers : Nat;
+  };
 
   type DonationInput = {
     donorId : Text;
@@ -302,8 +326,51 @@ actor {
     totalDonations - totalSpending;
   };
 
-  // Public query: Get donor profiles sorted by total donated
-  public query func getDonorProfiles() : async [Donor.Profile] {
+  // Returns the first 5 characters followed by "******"
+  func maskPhoneNumber(phone : ?Text) : ?Text {
+    switch (phone) {
+      case (null) { null };
+      case (?p) {
+        let length = p.size();
+        if (length <= 5) { ?p } else {
+          var result = "";
+          for ((i, char) in p.chars().enumerate()) {
+            result #= (
+              if (i < 5) {
+                Text.fromChar(char);
+              } else { "*" }
+            );
+          };
+          ?result;
+        };
+      };
+    };
+  };
+
+  // Public for all - returns donor profiles with masked phones
+  public query ({ caller }) func getDonorPublicProfiles() : async [DonorPublicProfile] {
+    let profiles = donorProfiles.values().toArray();
+    profiles.map<Donor.Profile, DonorPublicProfile>(
+      func(profile) {
+        {
+          id = profile.id;
+          displayName = profile.displayName;
+          email = profile.email;
+          maskedPhone = maskPhoneNumber(profile.phone);
+          principal = profile.principal;
+          joinedTimestamp = profile.joinedTimestamp;
+          totalDonated = profile.totalDonated;
+        };
+      }
+    );
+  };
+
+  // Admin-only: Get donor profiles with full details
+  public query ({ caller }) func getDonorProfiles() : async [DonorProfile] {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can access full donor profiles");
+    };
+
     let profiles = donorProfiles.values().toArray();
     profiles.sort<Donor.Profile>(
       func(a, b) {
@@ -312,8 +379,29 @@ actor {
     );
   };
 
-  // Public query: Get specific donor profile
-  public query func getDonorProfile(donorId : Text) : async ?Donor.Profile {
+  // Public: Get specific donor profile with masked phone for non-admins
+  public query ({ caller }) func getDonorPublicProfile(donorId : Text) : async ?DonorPublicProfile {
+    switch (donorProfiles.get(donorId)) {
+      case (?profile) {
+        ?{
+          id = profile.id;
+          displayName = profile.displayName;
+          email = profile.email;
+          maskedPhone = maskPhoneNumber(profile.phone);
+          principal = profile.principal;
+          joinedTimestamp = profile.joinedTimestamp;
+          totalDonated = profile.totalDonated;
+        };
+      };
+      case (null) { null };
+    };
+  };
+
+  // Admin-only: Get specific donor profile with full phone
+  public query ({ caller }) func getDonorProfile(donorId : Text) : async ?DonorProfile {
+    if (not (AccessControl.isAdmin(accessControlState, caller))) {
+      Runtime.trap("Unauthorized: Only admins can access full donor profiles");
+    };
     donorProfiles.get(donorId);
   };
 
@@ -356,7 +444,7 @@ actor {
     donorId : Text,
     displayName : Text,
     email : ?Text,
-    phone : ?Text,
+    phone : ?Text, // Actual phone data stored
     principal : ?Principal,
   ) {
     switch (donorProfiles.get(donorId)) {
@@ -377,7 +465,7 @@ actor {
           id = donorId;
           displayName = displayName;
           email = email;
-          phone = phone;
+          phone = phone; // Store actual phone data
           principal = principal;
           joinedTimestamp = Time.now();
           totalDonated = 0;
@@ -406,5 +494,24 @@ actor {
         // Should not happen if updateDonorProfile was called first
       };
     };
+  };
+
+  // Site Metrics methods
+  public shared ({ caller }) func incrementSiteViews() : async () {
+    totalSiteViews += 1;
+  };
+
+  public shared ({ caller }) func viewerConnected() : async () {
+    currentLiveViewers += 1;
+  };
+
+  public shared ({ caller }) func viewerDisconnected() : async () {
+    if (currentLiveViewers > 0) {
+      currentLiveViewers -= 1;
+    };
+  };
+
+  public query ({ caller }) func getSiteMetrics() : async Metrics {
+    { totalSiteViews; currentLiveViewers };
   };
 };

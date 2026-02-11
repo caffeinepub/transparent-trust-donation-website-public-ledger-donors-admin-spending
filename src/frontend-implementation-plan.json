@@ -1,307 +1,62 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Transparent Trust Donation Website (Frontend: Public Transparency + Donation + Admin Spending)",
+  "title": "Donor phone privacy in UI + single approved image across site",
   "requirements": [
     {
-      "id": "REQ-2",
-      "summary": "Add admin-gated UI for spending management using Internet Identity sign-in and backend admin checks.",
+      "id": "REQ-18",
+      "summary": "Show masked donor phone numbers to non-admin users and full phone numbers only to admins across donor views.",
       "acceptanceCriteria": [
-        "Only allowlisted admin principals can create outgoing spending transactions.",
-        "Non-admin users can view public data but cannot create outgoing spending records.",
-        "There is a safe initial admin setup mechanism (e.g., first-run initialization or a controlled method callable only when no admins exist).",
-        "Unauthorized calls return clear errors and do not modify state."
+        "On the Donor Detail page, non-admin users see a masked phone number (e.g., \"98765******\") and admins see the full phone number.",
+        "No UI path shows an unmasked phone number to non-admin users (including loading/empty states and any table/detail views).",
+        "All user-facing text remains in English."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/utils/phoneMask.ts",
           "operation": "create",
-          "description": "Create the app shell and routing structure, including an admin-only route section guarded by an admin check (use backend isCallerAdmin/getCallerUserRole). Use the selected authorization component patterns for login/logout and role-based UI gating. Verify the component's usage instructions before implementing."
+          "description": "Add a small helper to convert a phone string into a masked representation (visible prefix + asterisks) for UI-safe display when the backend provides a full phone value. Use this as a defensive fallback to ensure non-admin views never render an unmasked phone number."
         },
         {
-          "path": "frontend/src/components/auth/LoginButton.tsx",
-          "operation": "create",
-          "description": "Add a reusable Login/Logout button using the existing Internet Identity hook and clear React Query cache on logout (per authorization component guidance). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/auth/AdminGuard.tsx",
-          "operation": "create",
-          "description": "Create a guard wrapper that queries backend isCallerAdmin() and shows an access denied state for non-admins; handle backend authorization traps gracefully. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/useAdminStatus.ts",
-          "operation": "create",
-          "description": "Add a React Query hook that fetches isCallerAdmin()/getCallerUserRole from the backend actor and exposes loading/error states for admin gating and navigation. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/feedback/AccessDeniedScreen.tsx",
-          "operation": "create",
-          "description": "Create an access denied screen for unauthorized admin-route access; ensure it does not block public browsing pages."
-        }
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "summary": "Build a public Transparency Dashboard showing balance, totals, recent activity, and spending breakdown.",
-      "acceptanceCriteria": [
-        "A public page displays current balance, total incoming, and total outgoing.",
-        "A public section shows a spending breakdown grouped by category/purpose.",
-        "Recent transactions list is visible without sign-in.",
-        "UI handles empty-state gracefully (e.g., no transactions yet)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/DashboardPage.tsx",
-          "operation": "create",
-          "description": "Implement the public dashboard page that loads trust balance (getTrustBalance), totals (getTotalDonations/getTotalSpending), recent donations (getDonations) and recent spending (getSpendingRecords), renders empty states, and computes a spending breakdown grouped by purpose/category using available fields."
-        },
-        {
-          "path": "frontend/src/hooks/useLedgerData.ts",
-          "operation": "create",
-          "description": "Create React Query hooks to fetch dashboard inputs (balance, totals, recent donations, recent spending) with loading/empty/error states; keep queries enabled for anonymous users (public viewing)."
-        },
-        {
-          "path": "frontend/src/components/ledger/SpendingBreakdownCard.tsx",
-          "operation": "create",
-          "description": "Create a dashboard card component that groups outgoing spending records by category/purpose and displays totals per group using composed shadcn/ui components (do not edit frontend/src/components/ui). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/ledger/RecentTransactionsList.tsx",
-          "operation": "create",
-          "description": "Create a combined recent-transactions list component (incoming + outgoing) suitable for the dashboard, with clear labeling and empty state; compose shadcn/ui components. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
+          "path": "frontend/src/hooks/useQueries.ts",
           "operation": "modify",
-          "description": "Wire the DashboardPage as the primary public route and ensure navigation links to it are present in the shared layout (no login required for viewing)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Create a public unified transaction ledger with filtering, sorting, and transaction detail view.",
-      "acceptanceCriteria": [
-        "Users can view a unified ledger of all transactions.",
-        "Users can filter by transaction type (incoming vs outgoing).",
-        "Users can filter outgoing transactions by category/purpose.",
-        "Users can open a transaction detail view showing all stored fields (amount, timestamp, description/note, reference)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/LedgerPage.tsx",
-          "operation": "create",
-          "description": "Implement a public ledger page that fetches donations and spending, merges them into a unified list, supports filtering (incoming/outgoing/category) and sorting (newest/oldest), and renders empty states."
+          "description": "Add React Query hooks to fetch donor public profiles (list + detail) using the existing backend capabilities in frontend/src/backend.d.ts (getDonorPublicProfiles, getDonorPublicProfile). Ensure hooks support an enabled flag so pages can safely select admin vs public data without conditional hook calls."
         },
-        {
-          "path": "frontend/src/pages/TransactionDetailPage.tsx",
-          "operation": "create",
-          "description": "Implement a transaction detail view that displays all available fields for the selected transaction (amount, timestamp, description/note, donor/reference identifiers where available), using route params to identify the record."
-        },
-        {
-          "path": "frontend/src/components/ledger/LedgerFilters.tsx",
-          "operation": "create",
-          "description": "Create UI controls for type/category filters and sorting, composed from shadcn/ui components (do not edit frontend/src/components/ui). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/ledger/LedgerTable.tsx",
-          "operation": "create",
-          "description": "Create a ledger table/list component that supports click-through to transaction details and clearly differentiates incoming vs outgoing entries; compose shadcn/ui components. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Register routes for the ledger list page and transaction detail page; add navigation links from the header/layout."
-        }
-      ]
-    },
-    {
-      "id": "REQ-5",
-      "summary": "Create public donor/member listing and donor detail pages showing contribution totals and history.",
-      "acceptanceCriteria": [
-        "Public donors list loads from the backend and displays donors with their total contributed amount.",
-        "Donor detail view shows the donor’s incoming donation transactions.",
-        "Sensitive fields (if collected) can be omitted from public view; only explicitly public fields are displayed.",
-        "UI supports donors with no name by showing a safe fallback label (e.g., 'Anonymous')."
-      ],
-      "file_operations": [
         {
           "path": "frontend/src/pages/DonorsPage.tsx",
-          "operation": "create",
-          "description": "Implement a public donors list page that loads donor profiles (getDonorProfiles), displays displayName with a safe fallback ('Anonymous'), and shows total contributed amount; omit non-public/sensitive fields from the list UI."
+          "operation": "modify",
+          "description": "Use the authorization component’s admin capability (via the existing useAdminStatus hook) to decide whether to show admin donor data or public donor data. Fetch donor profiles via the new public-profile hooks for non-admin users, and via existing admin-profile hooks for admins. Verify the component's usage instructions before implementing."
         },
         {
           "path": "frontend/src/pages/DonorDetailPage.tsx",
-          "operation": "create",
-          "description": "Implement a donor detail page that loads a donor profile (getDonorProfile) and their donation history (getDonorDonations), showing only explicitly public fields and a clear empty-state when no donations exist."
-        },
-        {
-          "path": "frontend/src/hooks/useDonors.ts",
-          "operation": "create",
-          "description": "Create React Query hooks for donor list and donor detail data (profiles + donor donations), including error/loading states and safe handling when donor profile is null."
-        },
-        {
-          "path": "frontend/src/components/donors/DonorsTable.tsx",
-          "operation": "create",
-          "description": "Create a donors list table component composed from shadcn/ui components (do not edit frontend/src/components/ui); include clear formatting for amounts and joined timestamp. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
           "operation": "modify",
-          "description": "Register routes for donors list and donor detail pages; ensure they are accessible publicly without authentication and linked from navigation."
+          "description": "Use the authorization component’s admin capability (via the existing useAdminStatus hook) to fetch and render the correct donor profile shape: admin uses full donor profile; non-admin uses donor public profile with maskedPhone. Ensure the Phone row renders only a masked value for non-admins (prefer maskedPhone; otherwise mask defensively using the new helper). Verify the component's usage instructions before implementing."
         }
       ]
     },
     {
-      "id": "REQ-6",
-      "summary": "Add a donation submission flow with optional Internet Identity linking and anonymous donations.",
+      "id": "REQ-19",
+      "summary": "Replace all non-approved images with the single uploaded donations photo and remove references to generated/placeholder images.",
       "acceptanceCriteria": [
-        "Supporters can submit a donation record with amount and optional note.",
-        "If signed in, the donation is associated with the user’s principal and can appear under their donor profile.",
-        "If not signed in, the donation can be recorded as anonymous (no principal required).",
-        "Donation submissions appear in the public ledger after successful submission.",
-        "UI validates amount input and prevents negative/invalid values."
+        "The dashboard hero image no longer loads \"/assets/generated/trust-hero.dim_1600x600.png\" (or any other non-approved image), and instead uses the single uploaded donations photo asset.",
+        "No other pages/components reference additional generated images; the application visually uses only the uploaded donations photo asset wherever an image is rendered.",
+        "No new images are generated or added as part of this change."
       ],
       "file_operations": [
         {
-          "path": "frontend/src/pages/DonatePage.tsx",
+          "path": "frontend/src/utils/approvedImage.ts",
           "operation": "create",
-          "description": "Implement a donation page with a form for amount and optional note/description; allow optional sign-in via Internet Identity to link donor identity, while keeping anonymous donation possible; on success, invalidate relevant React Query caches so the public ledger/dashboard updates."
-        },
-        {
-          "path": "frontend/src/components/donate/DonationForm.tsx",
-          "operation": "create",
-          "description": "Create a donation form component with client-side validation (required positive amount, numeric input constraints) and clear error messaging; compose shadcn/ui components (do not edit frontend/src/components/ui). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/useDonate.ts",
-          "operation": "create",
-          "description": "Create a hook that calls backend addDonation with the appropriate DonationInput fields, handles success/failure UI state, and invalidates dashboard/ledger/donor queries after submission."
-        },
-        {
-          "path": "frontend/src/components/auth/ProfileSetupModal.tsx",
-          "operation": "create",
-          "description": "Add an optional profile setup modal shown after a user signs in if getCallerUserProfile() returns null, to capture a human-readable display name (and optional contact fields) for linked donations. Use authorization component guidance to prevent modal flash. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Register the donation page route and add navigation access; ensure donation flow works for both anonymous visitors and signed-in users (sign-in optional)."
-        }
-      ]
-    },
-    {
-      "id": "REQ-7",
-      "summary": "Add an admin-only management UI to create outgoing spending/usage records and handle errors like insufficient balance.",
-      "acceptanceCriteria": [
-        "Admin-only page is not accessible to non-admin users (guarded in UI and enforced by backend).",
-        "Admin can create an outgoing spending record and see it immediately in the public dashboard/ledger.",
-        "Spending creation form includes category/purpose, amount, and description as required fields.",
-        "System prevents spending that would make computed balance negative (or clearly blocks with an error)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/pages/admin/AdminSpendingPage.tsx",
-          "operation": "create",
-          "description": "Implement an admin-only page (wrapped by AdminGuard) that provides a spending creation form and shows recent spending records for verification; on create success, refresh dashboard/ledger/spending queries."
-        },
-        {
-          "path": "frontend/src/components/admin/SpendingForm.tsx",
-          "operation": "create",
-          "description": "Create a spending creation form with required category/purpose, amount, and description, plus optional attachment/reference text if supported by the backend fields; validate positive amount and display backend errors (e.g., insufficient balance) clearly; compose shadcn/ui components (do not edit frontend/src/components/ui). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/hooks/useSpendingAdmin.ts",
-          "operation": "create",
-          "description": "Create hooks for admin spending actions (addSpendingRecord and related admin refresh logic), with error handling that surfaces authorization failures and negative-balance prevention messages."
-        },
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Register the admin spending route under an /admin area and ensure it is guarded via AdminGuard; add nav link that only appears when admin status is confirmed."
-        }
-      ]
-    },
-    {
-      "id": "REQ-8",
-      "summary": "Ensure public transparency pages are accessible without login and no UI time-based expiration exists; restrict authentication to admin actions and optional donation linking.",
-      "acceptanceCriteria": [
-        "No UI or backend logic disables the app after a date/time.",
-        "All transparency pages (dashboard, ledger, donors list) are accessible without authentication.",
-        "Authentication is only required for admin actions and (optionally) to link a donation to a specific user identity."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/App.tsx",
-          "operation": "modify",
-          "description": "Ensure routing and data fetching allow anonymous access to dashboard/ledger/donors pages; keep sign-in prompts limited to donation identity linking and admin access only (no global login wall)."
-        },
-        {
-          "path": "frontend/src/components/layout/SiteHeader.tsx",
-          "operation": "create",
-          "description": "Create a shared header with navigation to Dashboard/Ledger/Donors/Donate and an optional LoginButton; ensure public routes do not require login to render."
-        },
-        {
-          "path": "frontend/src/components/layout/SiteLayout.tsx",
-          "operation": "create",
-          "description": "Create a consistent site layout wrapper (header + content container + footer) without any time-based disabling logic; use it across all pages."
-        }
-      ]
-    },
-    {
-      "id": "REQ-9",
-      "summary": "Apply a coherent, distinctive theme (palette, typography, spacing) across pages and components, avoiding default template styling.",
-      "acceptanceCriteria": [
-        "All main pages share a consistent layout system (header/nav, content width, typography scale).",
-        "Theme is consistent across buttons, tables/lists, forms, and cards.",
-        "Design uses a clear, readable palette (not blue+purple by default) and meets basic accessibility for contrast and readability."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/index.css",
-          "operation": "create",
-          "description": "Define global theme tokens and base styles (typography scale, background/surface colors, spacing conventions) with an accessible, distinctive palette; avoid default-looking template styling."
-        },
-        {
-          "path": "frontend/tailwind.config.js",
-          "operation": "modify",
-          "description": "Adjust Tailwind theme configuration (colors/typography/container defaults) to support the site’s distinctive charitable-trust theme while keeping shadcn/ui composition intact. Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/components/layout/SiteLayout.tsx",
-          "operation": "modify",
-          "description": "Apply the theme consistently via layout-level classNames/structure (content width, spacing, section styling) so all pages share the same system; compose shadcn/ui components (do not edit frontend/src/components/ui). Verify the component's usage instructions before implementing."
-        }
-      ]
-    },
-    {
-      "id": "REQ-10",
-      "summary": "Include required generated static images (logo + hero illustration) as frontend public assets and render them in the UI.",
-      "acceptanceCriteria": [
-        "Generated images exist under frontend/public/assets/generated and are referenced by the UI.",
-        "Header uses the generated logo asset.",
-        "Homepage/dashboard includes the hero illustration asset in a visually coherent way.",
-        "Build runs without missing-asset errors."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/public/assets/generated/trust-logo.dim_512x512.png",
-          "operation": "create",
-          "description": "Add the generated logo asset at frontend/public/assets/generated/trust-logo.dim_512x512.png and ensure it is committed as a static file (not served via backend)."
-        },
-        {
-          "path": "frontend/public/assets/generated/trust-hero.dim_1600x600.png",
-          "operation": "create",
-          "description": "Add the generated hero illustration asset at frontend/public/assets/generated/trust-hero.dim_1600x600.png and ensure it is committed as a static file (not served via backend)."
-        },
-        {
-          "path": "frontend/src/components/layout/SiteHeader.tsx",
-          "operation": "modify",
-          "description": "Render the generated logo from frontend/public/assets/generated/trust-logo.dim_512x512.png in the header branding area in a visually coherent way."
+          "description": "Define a single source of truth for the approved image path to the uploaded donations photo asset (use the existing file name: \"/assets/WhatsApp Image 2026-02-11 at 05.29.02.jpeg\"). This helps ensure all UI images reference only the approved asset."
         },
         {
           "path": "frontend/src/pages/DashboardPage.tsx",
           "operation": "modify",
-          "description": "Render the generated hero illustration from frontend/public/assets/generated/trust-hero.dim_1600x600.png in the dashboard/hero section in a visually coherent way."
+          "description": "Replace the hero <img> src that currently references /assets/generated/trust-hero.dim_1600x600.png to instead use the approved uploaded donations photo (via the new approvedImage utility). Ensure no other image assets are introduced."
+        },
+        {
+          "path": "frontend/src/components/layout/SiteHeader.tsx",
+          "operation": "modify",
+          "description": "Replace the header logo image that currently references /assets/generated/trust-logo.dim_512x512.png to instead use the approved uploaded donations photo (via the new approvedImage utility). Ensure this is the only image rendered by the header."
         }
       ]
     }

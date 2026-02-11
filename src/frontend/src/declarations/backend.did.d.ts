@@ -18,7 +18,7 @@ export interface DonationInput {
   'phone' : [] | [string],
   'amount' : bigint,
 }
-export interface Profile {
+export interface DonorProfile {
   'id' : string,
   'principal' : [] | [Principal],
   'displayName' : string,
@@ -26,6 +26,19 @@ export interface Profile {
   'email' : [] | [string],
   'phone' : [] | [string],
   'totalDonated' : bigint,
+}
+export interface DonorPublicProfile {
+  'id' : string,
+  'principal' : [] | [Principal],
+  'maskedPhone' : [] | [string],
+  'displayName' : string,
+  'joinedTimestamp' : Time,
+  'email' : [] | [string],
+  'totalDonated' : bigint,
+}
+export interface Metrics {
+  'totalSiteViews' : bigint,
+  'currentLiveViewers' : bigint,
 }
 export interface Record {
   'id' : string,
@@ -65,13 +78,17 @@ export interface _SERVICE {
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getDonations' : ActorMethod<[bigint, bigint], Array<Record__1>>,
   'getDonorDonations' : ActorMethod<[string], Array<Record__1>>,
-  'getDonorProfile' : ActorMethod<[string], [] | [Profile]>,
-  'getDonorProfiles' : ActorMethod<[], Array<Profile>>,
+  'getDonorProfile' : ActorMethod<[string], [] | [DonorProfile]>,
+  'getDonorProfiles' : ActorMethod<[], Array<DonorProfile>>,
+  'getDonorPublicProfile' : ActorMethod<[string], [] | [DonorPublicProfile]>,
+  'getDonorPublicProfiles' : ActorMethod<[], Array<DonorPublicProfile>>,
+  'getSiteMetrics' : ActorMethod<[], Metrics>,
   'getSpendingRecords' : ActorMethod<[bigint, bigint], Array<Record>>,
   'getTotalDonations' : ActorMethod<[], bigint>,
   'getTotalSpending' : ActorMethod<[], bigint>,
   'getTrustBalance' : ActorMethod<[], bigint>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
+  'incrementSiteViews' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'updateDonorProfileAdmin' : ActorMethod<
@@ -79,6 +96,8 @@ export interface _SERVICE {
     undefined
   >,
   'updateSpendingRecord' : ActorMethod<[string, bigint, string], undefined>,
+  'viewerConnected' : ActorMethod<[], undefined>,
+  'viewerDisconnected' : ActorMethod<[], undefined>,
 }
 export declare const idlService: IDL.ServiceClass;
 export declare const idlInitArgs: IDL.Type[];

@@ -98,6 +98,15 @@ export interface DonationInput {
     amount: bigint;
 }
 export type Time = bigint;
+export interface DonorPublicProfile {
+    id: string;
+    principal?: Principal;
+    maskedPhone?: string;
+    displayName: string;
+    joinedTimestamp: Time;
+    email?: string;
+    totalDonated: bigint;
+}
 export interface Record_ {
     id: string;
     description: string;
@@ -112,7 +121,7 @@ export interface Record__1 {
     timestamp: Time;
     amount: bigint;
 }
-export interface Profile {
+export interface DonorProfile {
     id: string;
     principal?: Principal;
     displayName: string;
@@ -125,6 +134,10 @@ export interface UserProfile {
     name: string;
     email?: string;
     phone?: string;
+}
+export interface Metrics {
+    totalSiteViews: bigint;
+    currentLiveViewers: bigint;
 }
 export enum Status {
     pending = "pending",
@@ -148,19 +161,25 @@ export interface backendInterface {
     getCallerUserRole(): Promise<UserRole>;
     getDonations(limit: bigint, offset: bigint): Promise<Array<Record__1>>;
     getDonorDonations(donorId: string): Promise<Array<Record__1>>;
-    getDonorProfile(donorId: string): Promise<Profile | null>;
-    getDonorProfiles(): Promise<Array<Profile>>;
+    getDonorProfile(donorId: string): Promise<DonorProfile | null>;
+    getDonorProfiles(): Promise<Array<DonorProfile>>;
+    getDonorPublicProfile(donorId: string): Promise<DonorPublicProfile | null>;
+    getDonorPublicProfiles(): Promise<Array<DonorPublicProfile>>;
+    getSiteMetrics(): Promise<Metrics>;
     getSpendingRecords(limit: bigint, offset: bigint): Promise<Array<Record_>>;
     getTotalDonations(): Promise<bigint>;
     getTotalSpending(): Promise<bigint>;
     getTrustBalance(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
+    incrementSiteViews(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     updateDonorProfileAdmin(donorId: string, displayName: string, email: string | null, phone: string | null): Promise<void>;
     updateSpendingRecord(id: string, amount: bigint, description: string): Promise<void>;
+    viewerConnected(): Promise<void>;
+    viewerDisconnected(): Promise<void>;
 }
-import type { DonationInput as _DonationInput, Profile as _Profile, Record__1 as _Record__1, Status as _Status, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
+import type { DonationInput as _DonationInput, DonorProfile as _DonorProfile, DonorPublicProfile as _DonorPublicProfile, Record__1 as _Record__1, Status as _Status, Time as _Time, UserProfile as _UserProfile, UserRole as _UserRole } from "./declarations/backend.did.d.ts";
 export class Backend implements backendInterface {
     constructor(private actor: ActorSubclass<_SERVICE>, private _uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, private _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, private processError?: (error: unknown) => never){}
     async _initializeAccessControlWithSecret(arg0: string): Promise<void> {
@@ -317,7 +336,7 @@ export class Backend implements backendInterface {
             return from_candid_vec_n11(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getDonorProfile(arg0: string): Promise<Profile | null> {
+    async getDonorProfile(arg0: string): Promise<DonorProfile | null> {
         if (this.processError) {
             try {
                 const result = await this.actor.getDonorProfile(arg0);
@@ -331,7 +350,7 @@ export class Backend implements backendInterface {
             return from_candid_opt_n16(this._uploadFile, this._downloadFile, result);
         }
     }
-    async getDonorProfiles(): Promise<Array<Profile>> {
+    async getDonorProfiles(): Promise<Array<DonorProfile>> {
         if (this.processError) {
             try {
                 const result = await this.actor.getDonorProfiles();
@@ -343,6 +362,48 @@ export class Backend implements backendInterface {
         } else {
             const result = await this.actor.getDonorProfiles();
             return from_candid_vec_n20(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getDonorPublicProfile(arg0: string): Promise<DonorPublicProfile | null> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getDonorPublicProfile(arg0);
+                return from_candid_opt_n21(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getDonorPublicProfile(arg0);
+            return from_candid_opt_n21(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getDonorPublicProfiles(): Promise<Array<DonorPublicProfile>> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getDonorPublicProfiles();
+                return from_candid_vec_n24(this._uploadFile, this._downloadFile, result);
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getDonorPublicProfiles();
+            return from_candid_vec_n24(this._uploadFile, this._downloadFile, result);
+        }
+    }
+    async getSiteMetrics(): Promise<Metrics> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.getSiteMetrics();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.getSiteMetrics();
+            return result;
         }
     }
     async getSpendingRecords(arg0: bigint, arg1: bigint): Promise<Array<Record_>> {
@@ -415,6 +476,20 @@ export class Backend implements backendInterface {
             return from_candid_opt_n5(this._uploadFile, this._downloadFile, result);
         }
     }
+    async incrementSiteViews(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.incrementSiteViews();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.incrementSiteViews();
+            return result;
+        }
+    }
     async isCallerAdmin(): Promise<boolean> {
         if (this.processError) {
             try {
@@ -432,28 +507,28 @@ export class Backend implements backendInterface {
     async saveCallerUserProfile(arg0: UserProfile): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n21(this._uploadFile, this._downloadFile, arg0));
+                const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n25(this._uploadFile, this._downloadFile, arg0));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n21(this._uploadFile, this._downloadFile, arg0));
+            const result = await this.actor.saveCallerUserProfile(to_candid_UserProfile_n25(this._uploadFile, this._downloadFile, arg0));
             return result;
         }
     }
     async updateDonorProfileAdmin(arg0: string, arg1: string, arg2: string | null, arg3: string | null): Promise<void> {
         if (this.processError) {
             try {
-                const result = await this.actor.updateDonorProfileAdmin(arg0, arg1, to_candid_opt_n23(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n23(this._uploadFile, this._downloadFile, arg3));
+                const result = await this.actor.updateDonorProfileAdmin(arg0, arg1, to_candid_opt_n27(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n27(this._uploadFile, this._downloadFile, arg3));
                 return result;
             } catch (e) {
                 this.processError(e);
                 throw new Error("unreachable");
             }
         } else {
-            const result = await this.actor.updateDonorProfileAdmin(arg0, arg1, to_candid_opt_n23(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n23(this._uploadFile, this._downloadFile, arg3));
+            const result = await this.actor.updateDonorProfileAdmin(arg0, arg1, to_candid_opt_n27(this._uploadFile, this._downloadFile, arg2), to_candid_opt_n27(this._uploadFile, this._downloadFile, arg3));
             return result;
         }
     }
@@ -471,9 +546,40 @@ export class Backend implements backendInterface {
             return result;
         }
     }
+    async viewerConnected(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.viewerConnected();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.viewerConnected();
+            return result;
+        }
+    }
+    async viewerDisconnected(): Promise<void> {
+        if (this.processError) {
+            try {
+                const result = await this.actor.viewerDisconnected();
+                return result;
+            } catch (e) {
+                this.processError(e);
+                throw new Error("unreachable");
+            }
+        } else {
+            const result = await this.actor.viewerDisconnected();
+            return result;
+        }
+    }
 }
-function from_candid_Profile_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Profile): Profile {
+function from_candid_DonorProfile_n17(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _DonorProfile): DonorProfile {
     return from_candid_record_n18(_uploadFile, _downloadFile, value);
+}
+function from_candid_DonorPublicProfile_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _DonorPublicProfile): DonorPublicProfile {
+    return from_candid_record_n23(_uploadFile, _downloadFile, value);
 }
 function from_candid_Record__1_n12(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _Record__1): Record__1 {
     return from_candid_record_n13(_uploadFile, _downloadFile, value);
@@ -487,11 +593,14 @@ function from_candid_UserProfile_n6(_uploadFile: (file: ExternalBlob) => Promise
 function from_candid_UserRole_n9(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: _UserRole): UserRole {
     return from_candid_variant_n10(_uploadFile, _downloadFile, value);
 }
-function from_candid_opt_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_Profile]): Profile | null {
-    return value.length === 0 ? null : from_candid_Profile_n17(_uploadFile, _downloadFile, value[0]);
+function from_candid_opt_n16(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_DonorProfile]): DonorProfile | null {
+    return value.length === 0 ? null : from_candid_DonorProfile_n17(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n19(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [Principal]): Principal | null {
     return value.length === 0 ? null : value[0];
+}
+function from_candid_opt_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_DonorPublicProfile]): DonorPublicProfile | null {
+    return value.length === 0 ? null : from_candid_DonorPublicProfile_n22(_uploadFile, _downloadFile, value[0]);
 }
 function from_candid_opt_n5(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: [] | [_UserProfile]): UserProfile | null {
     return value.length === 0 ? null : from_candid_UserProfile_n6(_uploadFile, _downloadFile, value[0]);
@@ -550,6 +659,33 @@ function from_candid_record_n18(_uploadFile: (file: ExternalBlob) => Promise<Uin
         totalDonated: value.totalDonated
     };
 }
+function from_candid_record_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+    id: string;
+    principal: [] | [Principal];
+    maskedPhone: [] | [string];
+    displayName: string;
+    joinedTimestamp: _Time;
+    email: [] | [string];
+    totalDonated: bigint;
+}): {
+    id: string;
+    principal?: Principal;
+    maskedPhone?: string;
+    displayName: string;
+    joinedTimestamp: Time;
+    email?: string;
+    totalDonated: bigint;
+} {
+    return {
+        id: value.id,
+        principal: record_opt_to_undefined(from_candid_opt_n19(_uploadFile, _downloadFile, value.principal)),
+        maskedPhone: record_opt_to_undefined(from_candid_opt_n8(_uploadFile, _downloadFile, value.maskedPhone)),
+        displayName: value.displayName,
+        joinedTimestamp: value.joinedTimestamp,
+        email: record_opt_to_undefined(from_candid_opt_n8(_uploadFile, _downloadFile, value.email)),
+        totalDonated: value.totalDonated
+    };
+}
 function from_candid_record_n7(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     name: string;
     email: [] | [string];
@@ -586,19 +722,22 @@ function from_candid_variant_n15(_uploadFile: (file: ExternalBlob) => Promise<Ui
 function from_candid_vec_n11(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Record__1>): Array<Record__1> {
     return value.map((x)=>from_candid_Record__1_n12(_uploadFile, _downloadFile, x));
 }
-function from_candid_vec_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_Profile>): Array<Profile> {
-    return value.map((x)=>from_candid_Profile_n17(_uploadFile, _downloadFile, x));
+function from_candid_vec_n20(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_DonorProfile>): Array<DonorProfile> {
+    return value.map((x)=>from_candid_DonorProfile_n17(_uploadFile, _downloadFile, x));
+}
+function from_candid_vec_n24(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: Array<_DonorPublicProfile>): Array<DonorPublicProfile> {
+    return value.map((x)=>from_candid_DonorPublicProfile_n22(_uploadFile, _downloadFile, x));
 }
 function to_candid_DonationInput_n1(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: DonationInput): _DonationInput {
     return to_candid_record_n2(_uploadFile, _downloadFile, value);
 }
-function to_candid_UserProfile_n21(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
-    return to_candid_record_n22(_uploadFile, _downloadFile, value);
+function to_candid_UserProfile_n25(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserProfile): _UserProfile {
+    return to_candid_record_n26(_uploadFile, _downloadFile, value);
 }
 function to_candid_UserRole_n3(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: UserRole): _UserRole {
     return to_candid_variant_n4(_uploadFile, _downloadFile, value);
 }
-function to_candid_opt_n23(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: string | null): [] | [string] {
+function to_candid_opt_n27(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: string | null): [] | [string] {
     return value === null ? candid_none() : candid_some(value);
 }
 function to_candid_record_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
@@ -625,7 +764,7 @@ function to_candid_record_n2(_uploadFile: (file: ExternalBlob) => Promise<Uint8A
         amount: value.amount
     };
 }
-function to_candid_record_n22(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
+function to_candid_record_n26(_uploadFile: (file: ExternalBlob) => Promise<Uint8Array>, _downloadFile: (file: Uint8Array) => Promise<ExternalBlob>, value: {
     name: string;
     email?: string;
     phone?: string;

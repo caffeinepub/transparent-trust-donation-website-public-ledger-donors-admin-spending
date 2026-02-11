@@ -2,81 +2,13 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-add-admin-authorization-to-restrict-who-can-create-edit-outgoing-spending-usage-records-and-if-applicable-manage-donor-records-admin-access-must-be-based-on-internet-identity-principal-allowlisting-stored-in-canister-state",
-      "featureTitle": "Add admin authorization to restrict who can create/edit outgoing spending/usage records and (if applicable) manage donor records; admin access must be based on Internet Identity principal allowlisting stored in canister state.",
+      "featureId": "feature-update-the-frontend-donor-views-to-display-masked-phone-numbers-for-non-admin-viewers-and-full-phone-numbers-only-for-admins-including-the-donor-detail-page-where-the-phone-number-is-currently-rendered",
+      "featureTitle": "Update the frontend donor views to display masked phone numbers for non-admin viewers and full phone numbers only for admins, including the donor detail page where the phone number is currently rendered.",
       "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/auth/AdminGuard.tsx",
-        "frontend/src/components/auth/LoginButton.tsx",
-        "frontend/src/components/feedback/AccessDeniedScreen.tsx",
-        "frontend/src/hooks/useAdminStatus.ts"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-2"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-create-a-public-transparency-dashboard-ui-that-shows-total-funds-current-balance-totals-in-out-recent-transactions-and-breakdown-of-outgoing-spending-by-category-purpose",
-      "featureTitle": "Create a public Transparency Dashboard UI that shows: total funds (current balance), totals in/out, recent transactions, and breakdown of outgoing spending by category/purpose.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/ledger/RecentTransactionsList.tsx",
-        "frontend/src/components/ledger/SpendingBreakdownCard.tsx",
-        "frontend/src/pages/DashboardPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-3"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-create-a-public-transaction-ledger-ui-that-lists-all-incoming-and-outgoing-transactions-with-filtering-incoming-outgoing-category-and-sorting-newest-oldest-and-supports-viewing-a-transaction-s-full-details",
-      "featureTitle": "Create a public Transaction Ledger UI that lists all incoming and outgoing transactions with filtering (incoming/outgoing/category) and sorting (newest/oldest), and supports viewing a transaction’s full details.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/ledger/LedgerFilters.tsx",
-        "frontend/src/components/ledger/LedgerTable.tsx",
-        "frontend/src/pages/LedgerPage.tsx",
-        "frontend/src/pages/TransactionDetailPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-create-a-public-donor-member-listing-ui-that-shows-each-contributor-s-details-and-contribution-totals-with-a-donor-detail-view-showing-the-donor-s-contribution-history",
-      "featureTitle": "Create a public Donor/Member Listing UI that shows each contributor’s details and contribution totals, with a donor detail view showing the donor’s contribution history.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/donors/DonorsTable.tsx",
+        "frontend/src/hooks/useQueries.ts",
         "frontend/src/pages/DonorDetailPage.tsx",
-        "frontend/src/pages/DonorsPage.tsx"
+        "frontend/src/pages/DonorsPage.tsx",
+        "frontend/src/utils/phoneMask.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -87,101 +19,17 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-5"
+        "REQ-18"
       ],
       "confidence": "high"
     },
     {
-      "featureId": "feature-add-a-donation-flow-that-allows-supporters-worldwide-to-contribute-and-have-the-contribution-recorded-on-the-public-ledger-including-a-donor-identity-option-signed-in-via-internet-identity-and-an-anonymous-option",
-      "featureTitle": "Add a Donation flow that allows supporters worldwide to contribute and have the contribution recorded on the public ledger, including a donor identity option (signed-in via Internet Identity) and an anonymous option.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/auth/ProfileSetupModal.tsx",
-        "frontend/src/components/donate/DonationForm.tsx",
-        "frontend/src/pages/DonatePage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-6"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-add-an-admin-management-ui-for-authorized-admins-to-create-outgoing-spending-usage-records-purpose-category-amount-description-date-time-optional-attachment-reference-text-and-optionally-correct-mistakes-via-a-clear-audit-friendly-approach",
-      "featureTitle": "Add an Admin Management UI for authorized admins to create outgoing spending/usage records (purpose/category, amount, description, date/time, optional attachment/reference text) and (optionally) correct mistakes via a clear audit-friendly approach.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/admin/SpendingForm.tsx",
-        "frontend/src/pages/admin/AdminSpendingPage.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-7"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-the-website-is-designed-and-implemented-to-operate-indefinitely-no-built-in-expiration-time-period-logic-and-is-publicly-accessible-without-requiring-login-for-viewing-transparency-information",
-      "featureTitle": "Ensure the website is designed and implemented to operate indefinitely (no built-in expiration/time period logic) and is publicly accessible without requiring login for viewing transparency information.",
-      "files": [
-        "frontend/src/App.tsx",
-        "frontend/src/components/layout/SiteHeader.tsx",
-        "frontend/src/components/layout/SiteLayout.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-8"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-apply-a-coherent-distinctive-visual-theme-across-the-site-colors-typography-spacing-component-styling-suitable-for-a-global-charitable-trust-transparency-platform-avoiding-default-looking-template-styling",
-      "featureTitle": "Apply a coherent, distinctive visual theme across the site (colors, typography, spacing, component styling) suitable for a global charitable trust transparency platform, avoiding default-looking template styling.",
-      "files": [
-        "frontend/src/components/layout/SiteLayout.tsx",
-        "frontend/src/index.css",
-        "frontend/tailwind.config.js"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-9"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-generate-and-include-required-static-images-logo-and-a-simple-hero-illustration-and-render-them-as-static-assets-from-frontend-public-assets-generated-not-served-via-the-backend",
-      "featureTitle": "Generate and include required static images (logo and a simple hero illustration) and render them as static assets from frontend/public/assets/generated (not served via the backend).",
+      "featureId": "feature-ensure-the-site-uses-only-the-single-user-uploaded-donations-photo-with-the-why-not-us-logo-as-its-image-asset-across-the-ui-remove-replace-any-references-to-other-generated-or-placeholder-images-for-example-the-current-dashboard-hero-image-at-assets-generated-trust-hero-dim-1600x600-png-so-that-no-other-images-are-used",
+      "featureTitle": "Ensure the site uses ONLY the single user-uploaded donations photo with the “Why Not Us” logo as its image asset across the UI. Remove/replace any references to other generated or placeholder images (for example, the current dashboard hero image at \"/assets/generated/trust-hero.dim_1600x600.png\") so that no other images are used.",
       "files": [
         "frontend/src/components/layout/SiteHeader.tsx",
-        "frontend/src/pages/DashboardPage.tsx"
+        "frontend/src/pages/DashboardPage.tsx",
+        "frontend/src/utils/approvedImage.ts"
       ],
       "components": [
         "authorization@4.0.0",
@@ -192,7 +40,7 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-10"
+        "REQ-19"
       ],
       "confidence": "high"
     }

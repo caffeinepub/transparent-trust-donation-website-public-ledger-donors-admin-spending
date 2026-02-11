@@ -1,19 +1,29 @@
 import { useParams, useNavigate } from '@tanstack/react-router';
-import { useGetDonorProfile, useGetDonorDonations } from '@/hooks/useQueries';
+import { useGetDonorProfile, useGetDonorPublicProfile, useGetDonorDonations } from '@/hooks/useQueries';
+import { useAdminStatus } from '@/hooks/useAdminStatus';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, DollarSign, Mail, Phone, User } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { maskPhoneNumber } from '@/utils/phoneMask';
 
 export default function DonorDetailPage() {
   const { id } = useParams({ from: '/donor/$id' });
   const navigate = useNavigate();
+  const { isAdmin, isLoading: adminLoading } = useAdminStatus();
   
-  const { data: donor, isLoading: donorLoading } = useGetDonorProfile(id);
+  // Fetch admin profile only if user is admin
+  const { data: adminDonor, isLoading: adminDonorLoading } = useGetDonorProfile(id, isAdmin);
+  
+  // Fetch public profile only if user is not admin
+  const { data: publicDonor, isLoading: publicDonorLoading } = useGetDonorPublicProfile(id, !isAdmin);
+  
   const { data: donations = [], isLoading: donationsLoading } = useGetDonorDonations(id);
 
-  const isLoading = donorLoading || donationsLoading;
+  // Use the appropriate donor data based on admin status
+  const donor = isAdmin ? adminDonor : publicDonor;
+  const isLoading = adminLoading || donationsLoading || (isAdmin ? adminDonorLoading : publicDonorLoading);
 
   const formatCurrency = (amount: bigint) => {
     return `$${Number(amount).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -35,6 +45,26 @@ export default function DonorDetailPage() {
       failed: 'destructive',
     };
     return <Badge variant={variants[status] || 'secondary'}>{status}</Badge>;
+  };
+
+  // Get phone number - for admins show full, for non-admins show masked
+  const getPhoneDisplay = () => {
+    if (!donor) return null;
+    
+    if (isAdmin && 'phone' in donor) {
+      // Admin sees full phone from DonorProfile
+      return donor.phone;
+    } else if (!isAdmin && 'maskedPhone' in donor) {
+      // Non-admin sees maskedPhone from DonorPublicProfile
+      return donor.maskedPhone;
+    }
+    
+    // Defensive fallback: mask any phone that might slip through
+    if ('phone' in donor && donor.phone) {
+      return maskPhoneNumber(donor.phone);
+    }
+    
+    return null;
   };
 
   if (isLoading) {
@@ -59,6 +89,8 @@ export default function DonorDetailPage() {
       </div>
     );
   }
+
+  const phoneDisplay = getPhoneDisplay();
 
   return (
     <div className="container py-12">
@@ -99,14 +131,14 @@ export default function DonorDetailPage() {
               </div>
             )}
 
-            {donor.phone && (
+            {phoneDisplay && (
               <div className="flex items-start gap-3">
                 <div className="p-2 rounded-lg bg-primary/10">
                   <Phone className="h-5 w-5 text-primary" />
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground">Phone</p>
-                  <p className="font-medium">{donor.phone}</p>
+                  <p className="font-medium">{phoneDisplay}</p>
                 </div>
               </div>
             )}

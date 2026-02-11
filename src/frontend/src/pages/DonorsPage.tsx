@@ -1,10 +1,21 @@
-import { useGetDonorProfiles } from '@/hooks/useQueries';
+import { useGetDonorProfiles, useGetDonorPublicProfiles } from '@/hooks/useQueries';
+import { useAdminStatus } from '@/hooks/useAdminStatus';
 import DonorsTable from '@/components/donors/DonorsTable';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Users } from 'lucide-react';
 
 export default function DonorsPage() {
-  const { data: donors = [], isLoading } = useGetDonorProfiles();
+  const { isAdmin, isLoading: adminLoading } = useAdminStatus();
+  
+  // Fetch admin profiles only if user is admin
+  const { data: adminDonors = [], isLoading: adminDonorsLoading } = useGetDonorProfiles(isAdmin);
+  
+  // Fetch public profiles only if user is not admin
+  const { data: publicDonors = [], isLoading: publicDonorsLoading } = useGetDonorPublicProfiles(!isAdmin);
+  
+  // Use the appropriate data based on admin status
+  const donors = isAdmin ? adminDonors : publicDonors;
+  const isLoading = adminLoading || (isAdmin ? adminDonorsLoading : publicDonorsLoading);
 
   return (
     <div className="container py-12">

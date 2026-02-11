@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { DonationInput, UserProfile } from '../backend';
+import type { DonationInput, UserProfile, Metrics, DonorPublicProfile } from '../backend';
 
 // Dashboard queries
 export function useGetTrustBalance() {
@@ -39,6 +39,67 @@ export function useGetTotalSpending() {
       return actor.getTotalSpending();
     },
     enabled: !!actor && !isFetching,
+  });
+}
+
+// Site metrics queries
+export function useGetSiteMetrics() {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Metrics>({
+    queryKey: ['siteMetrics'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getSiteMetrics();
+    },
+    enabled: !!actor && !isFetching,
+    refetchInterval: 10000, // Poll every 10 seconds
+    retry: 3,
+  });
+}
+
+export function useIncrementSiteViews() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.incrementSiteViews();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['siteMetrics'] });
+    },
+  });
+}
+
+export function useViewerConnected() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.viewerConnected();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['siteMetrics'] });
+    },
+  });
+}
+
+export function useViewerDisconnected() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.viewerDisconnected();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['siteMetrics'] });
+    },
   });
 }
 
@@ -83,8 +144,8 @@ export function useGetSpendingRecords(limit: number = 50, offset: number = 0) {
   });
 }
 
-// Donor queries
-export function useGetDonorProfiles() {
+// Donor queries - Admin only (full profiles with unmasked phone)
+export function useGetDonorProfiles(enabled: boolean = true) {
   const { actor, isFetching } = useActor();
 
   return useQuery({
@@ -93,11 +154,11 @@ export function useGetDonorProfiles() {
       if (!actor) throw new Error('Actor not available');
       return actor.getDonorProfiles();
     },
-    enabled: !!actor && !isFetching,
+    enabled: !!actor && !isFetching && enabled,
   });
 }
 
-export function useGetDonorProfile(donorId: string) {
+export function useGetDonorProfile(donorId: string, enabled: boolean = true) {
   const { actor, isFetching } = useActor();
 
   return useQuery({
@@ -106,7 +167,34 @@ export function useGetDonorProfile(donorId: string) {
       if (!actor) throw new Error('Actor not available');
       return actor.getDonorProfile(donorId);
     },
-    enabled: !!actor && !isFetching && !!donorId,
+    enabled: !!actor && !isFetching && !!donorId && enabled,
+  });
+}
+
+// Donor queries - Public (profiles with masked phone)
+export function useGetDonorPublicProfiles(enabled: boolean = true) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<DonorPublicProfile[]>({
+    queryKey: ['donorPublicProfiles'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getDonorPublicProfiles();
+    },
+    enabled: !!actor && !isFetching && enabled,
+  });
+}
+
+export function useGetDonorPublicProfile(donorId: string, enabled: boolean = true) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<DonorPublicProfile | null>({
+    queryKey: ['donorPublicProfile', donorId],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getDonorPublicProfile(donorId);
+    },
+    enabled: !!actor && !isFetching && !!donorId && enabled,
   });
 }
 
@@ -146,6 +234,7 @@ export function useAddDonation() {
       queryClient.invalidateQueries({ queryKey: ['trustBalance'] });
       queryClient.invalidateQueries({ queryKey: ['totalDonations'] });
       queryClient.invalidateQueries({ queryKey: ['donorProfiles'] });
+      queryClient.invalidateQueries({ queryKey: ['donorPublicProfiles'] });
     },
   });
 }
@@ -196,6 +285,7 @@ export function useConfirmDonation() {
       queryClient.invalidateQueries({ queryKey: ['trustBalance'] });
       queryClient.invalidateQueries({ queryKey: ['totalDonations'] });
       queryClient.invalidateQueries({ queryKey: ['donorProfiles'] });
+      queryClient.invalidateQueries({ queryKey: ['donorPublicProfiles'] });
     },
   });
 }

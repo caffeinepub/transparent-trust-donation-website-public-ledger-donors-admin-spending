@@ -40,7 +40,7 @@ export const Record__1 = IDL.Record({
   'timestamp' : Time,
   'amount' : IDL.Nat,
 });
-export const Profile = IDL.Record({
+export const DonorProfile = IDL.Record({
   'id' : IDL.Text,
   'principal' : IDL.Opt(IDL.Principal),
   'displayName' : IDL.Text,
@@ -48,6 +48,19 @@ export const Profile = IDL.Record({
   'email' : IDL.Opt(IDL.Text),
   'phone' : IDL.Opt(IDL.Text),
   'totalDonated' : IDL.Nat,
+});
+export const DonorPublicProfile = IDL.Record({
+  'id' : IDL.Text,
+  'principal' : IDL.Opt(IDL.Principal),
+  'maskedPhone' : IDL.Opt(IDL.Text),
+  'displayName' : IDL.Text,
+  'joinedTimestamp' : Time,
+  'email' : IDL.Opt(IDL.Text),
+  'totalDonated' : IDL.Nat,
+});
+export const Metrics = IDL.Record({
+  'totalSiteViews' : IDL.Nat,
+  'currentLiveViewers' : IDL.Nat,
 });
 export const Record = IDL.Record({
   'id' : IDL.Text,
@@ -72,8 +85,19 @@ export const idlService = IDL.Service({
       ['query'],
     ),
   'getDonorDonations' : IDL.Func([IDL.Text], [IDL.Vec(Record__1)], ['query']),
-  'getDonorProfile' : IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
-  'getDonorProfiles' : IDL.Func([], [IDL.Vec(Profile)], ['query']),
+  'getDonorProfile' : IDL.Func([IDL.Text], [IDL.Opt(DonorProfile)], ['query']),
+  'getDonorProfiles' : IDL.Func([], [IDL.Vec(DonorProfile)], ['query']),
+  'getDonorPublicProfile' : IDL.Func(
+      [IDL.Text],
+      [IDL.Opt(DonorPublicProfile)],
+      ['query'],
+    ),
+  'getDonorPublicProfiles' : IDL.Func(
+      [],
+      [IDL.Vec(DonorPublicProfile)],
+      ['query'],
+    ),
+  'getSiteMetrics' : IDL.Func([], [Metrics], ['query']),
   'getSpendingRecords' : IDL.Func(
       [IDL.Nat, IDL.Nat],
       [IDL.Vec(Record)],
@@ -87,6 +111,7 @@ export const idlService = IDL.Service({
       [IDL.Opt(UserProfile)],
       ['query'],
     ),
+  'incrementSiteViews' : IDL.Func([], [], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'updateDonorProfileAdmin' : IDL.Func(
@@ -95,6 +120,8 @@ export const idlService = IDL.Service({
       [],
     ),
   'updateSpendingRecord' : IDL.Func([IDL.Text, IDL.Nat, IDL.Text], [], []),
+  'viewerConnected' : IDL.Func([], [], []),
+  'viewerDisconnected' : IDL.Func([], [], []),
 });
 
 export const idlInitArgs = [];
@@ -132,7 +159,7 @@ export const idlFactory = ({ IDL }) => {
     'timestamp' : Time,
     'amount' : IDL.Nat,
   });
-  const Profile = IDL.Record({
+  const DonorProfile = IDL.Record({
     'id' : IDL.Text,
     'principal' : IDL.Opt(IDL.Principal),
     'displayName' : IDL.Text,
@@ -140,6 +167,19 @@ export const idlFactory = ({ IDL }) => {
     'email' : IDL.Opt(IDL.Text),
     'phone' : IDL.Opt(IDL.Text),
     'totalDonated' : IDL.Nat,
+  });
+  const DonorPublicProfile = IDL.Record({
+    'id' : IDL.Text,
+    'principal' : IDL.Opt(IDL.Principal),
+    'maskedPhone' : IDL.Opt(IDL.Text),
+    'displayName' : IDL.Text,
+    'joinedTimestamp' : Time,
+    'email' : IDL.Opt(IDL.Text),
+    'totalDonated' : IDL.Nat,
+  });
+  const Metrics = IDL.Record({
+    'totalSiteViews' : IDL.Nat,
+    'currentLiveViewers' : IDL.Nat,
   });
   const Record = IDL.Record({
     'id' : IDL.Text,
@@ -164,8 +204,23 @@ export const idlFactory = ({ IDL }) => {
         ['query'],
       ),
     'getDonorDonations' : IDL.Func([IDL.Text], [IDL.Vec(Record__1)], ['query']),
-    'getDonorProfile' : IDL.Func([IDL.Text], [IDL.Opt(Profile)], ['query']),
-    'getDonorProfiles' : IDL.Func([], [IDL.Vec(Profile)], ['query']),
+    'getDonorProfile' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(DonorProfile)],
+        ['query'],
+      ),
+    'getDonorProfiles' : IDL.Func([], [IDL.Vec(DonorProfile)], ['query']),
+    'getDonorPublicProfile' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(DonorPublicProfile)],
+        ['query'],
+      ),
+    'getDonorPublicProfiles' : IDL.Func(
+        [],
+        [IDL.Vec(DonorPublicProfile)],
+        ['query'],
+      ),
+    'getSiteMetrics' : IDL.Func([], [Metrics], ['query']),
     'getSpendingRecords' : IDL.Func(
         [IDL.Nat, IDL.Nat],
         [IDL.Vec(Record)],
@@ -179,6 +234,7 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Opt(UserProfile)],
         ['query'],
       ),
+    'incrementSiteViews' : IDL.Func([], [], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'updateDonorProfileAdmin' : IDL.Func(
@@ -187,6 +243,8 @@ export const idlFactory = ({ IDL }) => {
         [],
       ),
     'updateSpendingRecord' : IDL.Func([IDL.Text, IDL.Nat, IDL.Text], [], []),
+    'viewerConnected' : IDL.Func([], [], []),
+    'viewerDisconnected' : IDL.Func([], [], []),
   });
 };
 
