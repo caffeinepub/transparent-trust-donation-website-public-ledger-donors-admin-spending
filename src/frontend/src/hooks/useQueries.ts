@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useActor } from './useActor';
-import type { DonationInput, UserProfile, Metrics, DonorPublicProfile } from '../backend';
+import type { DonationInput, UserProfile, Metrics, DonorPublicProfile, Notification } from '../backend';
 
 // Dashboard queries
 export function useGetTrustBalance() {
@@ -195,6 +195,37 @@ export function useGetCallerUserProfile() {
   };
 }
 
+// Admin Notification queries
+export function useGetAdminNotifications(limit?: number, isAdmin: boolean = false) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<Notification[]>({
+    queryKey: ['adminNotifications', limit],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getAdminNotifications(limit ? BigInt(limit) : null);
+    },
+    enabled: !!actor && !isFetching && isAdmin,
+    refetchInterval: 15000, // Poll every 15 seconds for new notifications
+    retry: false,
+  });
+}
+
+export function useGetUnreadNotificationCount(isAdmin: boolean = false) {
+  const { actor, isFetching } = useActor();
+
+  return useQuery<bigint>({
+    queryKey: ['unreadNotificationCount'],
+    queryFn: async () => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.getUnreadNotificationCount();
+    },
+    enabled: !!actor && !isFetching && isAdmin,
+    refetchInterval: 10000, // Poll every 10 seconds for unread count
+    retry: false,
+  });
+}
+
 // Mutations
 export function useAddDonation() {
   const { actor } = useActor();
@@ -243,6 +274,8 @@ export function useAddSpendingRecord() {
       queryClient.invalidateQueries({ queryKey: ['spendingRecords'] });
       queryClient.invalidateQueries({ queryKey: ['trustBalance'] });
       queryClient.invalidateQueries({ queryKey: ['totalSpending'] });
+      queryClient.invalidateQueries({ queryKey: ['adminNotifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
     },
   });
 }
@@ -277,6 +310,38 @@ export function useDeclineDonation() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['donations'] });
+    },
+  });
+}
+
+export function useMarkNotificationAsRead() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (notificationId: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.markNotificationAsRead(notificationId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminNotifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
+    },
+  });
+}
+
+export function useAcknowledgeNotification() {
+  const { actor } = useActor();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (notificationId: bigint) => {
+      if (!actor) throw new Error('Actor not available');
+      return actor.acknowledgeNotification(notificationId);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['adminNotifications'] });
+      queryClient.invalidateQueries({ queryKey: ['unreadNotificationCount'] });
     },
   });
 }

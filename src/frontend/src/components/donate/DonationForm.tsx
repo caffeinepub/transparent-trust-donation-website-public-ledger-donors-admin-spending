@@ -37,7 +37,10 @@ export default function DonationForm() {
     if (isAuthenticated && userProfile) {
       setDisplayName(userProfile.name || '');
       setEmail(userProfile.email || '');
-      setPhone(userProfile.phone || '+91');
+      // Only prefill phone if it exists in profile
+      if (userProfile.phone) {
+        setPhone(userProfile.phone);
+      }
     }
   }, [isAuthenticated, userProfile]);
 

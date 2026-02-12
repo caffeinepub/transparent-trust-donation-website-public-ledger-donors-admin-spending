@@ -21,26 +21,44 @@ export interface DonationInput {
 }
 export interface DonorProfile {
   'id' : string,
+  'age' : [] | [bigint],
   'principal' : [] | [Principal],
   'displayName' : string,
   'joinedTimestamp' : Time,
   'email' : [] | [string],
+  'gender' : Gender,
   'phone' : string,
   'totalDonated' : bigint,
 }
 export interface DonorPublicProfile {
   'id' : string,
+  'age' : [] | [bigint],
   'principal' : [] | [Principal],
   'maskedPhone' : string,
   'displayName' : string,
   'joinedTimestamp' : Time,
   'email' : [] | [string],
+  'gender' : Gender,
   'totalDonated' : bigint,
 }
+export type Gender = { 'other' : null } |
+  { 'female' : null } |
+  { 'male' : null } |
+  { 'preferNotToSay' : null };
 export interface Metrics {
   'totalSiteViews' : bigint,
   'currentLiveViewers' : bigint,
 }
+export interface Notification {
+  'id' : bigint,
+  'message' : string,
+  'timestamp' : Time,
+  'priority' : NotificationPriority,
+  'isNew' : boolean,
+}
+export type NotificationPriority = { 'low' : null } |
+  { 'normal' : null } |
+  { 'high' : null };
 export interface Record {
   'id' : string,
   'description' : string,
@@ -61,8 +79,10 @@ export type Status = { 'pending' : null } |
   { 'failed' : null };
 export type Time = bigint;
 export interface UserProfile {
+  'age' : [] | [bigint],
   'name' : string,
   'email' : [] | [string],
+  'gender' : Gender,
   'phone' : [] | [string],
 }
 export type UserRole = { 'admin' : null } |
@@ -70,6 +90,7 @@ export type UserRole = { 'admin' : null } |
   { 'guest' : null };
 export interface _SERVICE {
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
+  'acknowledgeNotification' : ActorMethod<[bigint], undefined>,
   'addDonation' : ActorMethod<[DonationInput], string>,
   'addSpendingRecord' : ActorMethod<[bigint, string], string>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
@@ -77,6 +98,7 @@ export interface _SERVICE {
   'confirmDonation' : ActorMethod<[string], undefined>,
   'declineDonation' : ActorMethod<[string], undefined>,
   'deleteSpendingRecord' : ActorMethod<[string], undefined>,
+  'getAdminNotifications' : ActorMethod<[[] | [bigint]], Array<Notification>>,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
   'getDonations' : ActorMethod<[bigint, bigint], Array<Record__1>>,
@@ -90,10 +112,12 @@ export interface _SERVICE {
   'getTotalDonations' : ActorMethod<[], bigint>,
   'getTotalSpending' : ActorMethod<[], bigint>,
   'getTrustBalance' : ActorMethod<[], bigint>,
+  'getUnreadNotificationCount' : ActorMethod<[], bigint>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'heartbeatLiveViewer' : ActorMethod<[string], undefined>,
   'incrementSiteViews' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
+  'markNotificationAsRead' : ActorMethod<[bigint], undefined>,
   'registerLiveViewer' : ActorMethod<[string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
   'unregisterLiveViewer' : ActorMethod<[string], undefined>,

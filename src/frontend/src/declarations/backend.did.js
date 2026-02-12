@@ -22,9 +22,30 @@ export const UserRole = IDL.Variant({
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
+export const Time = IDL.Int;
+export const NotificationPriority = IDL.Variant({
+  'low' : IDL.Null,
+  'normal' : IDL.Null,
+  'high' : IDL.Null,
+});
+export const Notification = IDL.Record({
+  'id' : IDL.Nat,
+  'message' : IDL.Text,
+  'timestamp' : Time,
+  'priority' : NotificationPriority,
+  'isNew' : IDL.Bool,
+});
+export const Gender = IDL.Variant({
+  'other' : IDL.Null,
+  'female' : IDL.Null,
+  'male' : IDL.Null,
+  'preferNotToSay' : IDL.Null,
+});
 export const UserProfile = IDL.Record({
+  'age' : IDL.Opt(IDL.Nat),
   'name' : IDL.Text,
   'email' : IDL.Opt(IDL.Text),
+  'gender' : Gender,
   'phone' : IDL.Opt(IDL.Text),
 });
 export const Status = IDL.Variant({
@@ -32,7 +53,6 @@ export const Status = IDL.Variant({
   'confirmed' : IDL.Null,
   'failed' : IDL.Null,
 });
-export const Time = IDL.Int;
 export const Record__1 = IDL.Record({
   'id' : IDL.Text,
   'utr' : IDL.Text,
@@ -44,20 +64,24 @@ export const Record__1 = IDL.Record({
 });
 export const DonorProfile = IDL.Record({
   'id' : IDL.Text,
+  'age' : IDL.Opt(IDL.Nat),
   'principal' : IDL.Opt(IDL.Principal),
   'displayName' : IDL.Text,
   'joinedTimestamp' : Time,
   'email' : IDL.Opt(IDL.Text),
+  'gender' : Gender,
   'phone' : IDL.Text,
   'totalDonated' : IDL.Nat,
 });
 export const DonorPublicProfile = IDL.Record({
   'id' : IDL.Text,
+  'age' : IDL.Opt(IDL.Nat),
   'principal' : IDL.Opt(IDL.Principal),
   'maskedPhone' : IDL.Text,
   'displayName' : IDL.Text,
   'joinedTimestamp' : Time,
   'email' : IDL.Opt(IDL.Text),
+  'gender' : Gender,
   'totalDonated' : IDL.Nat,
 });
 export const Metrics = IDL.Record({
@@ -73,6 +97,7 @@ export const Record = IDL.Record({
 
 export const idlService = IDL.Service({
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+  'acknowledgeNotification' : IDL.Func([IDL.Nat], [], []),
   'addDonation' : IDL.Func([DonationInput], [IDL.Text], []),
   'addSpendingRecord' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Text], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
@@ -80,6 +105,11 @@ export const idlService = IDL.Service({
   'confirmDonation' : IDL.Func([IDL.Text], [], []),
   'declineDonation' : IDL.Func([IDL.Text], [], []),
   'deleteSpendingRecord' : IDL.Func([IDL.Text], [], []),
+  'getAdminNotifications' : IDL.Func(
+      [IDL.Opt(IDL.Nat)],
+      [IDL.Vec(Notification)],
+      ['query'],
+    ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
   'getDonations' : IDL.Func(
@@ -109,6 +139,7 @@ export const idlService = IDL.Service({
   'getTotalDonations' : IDL.Func([], [IDL.Nat], ['query']),
   'getTotalSpending' : IDL.Func([], [IDL.Nat], ['query']),
   'getTrustBalance' : IDL.Func([], [IDL.Int], ['query']),
+  'getUnreadNotificationCount' : IDL.Func([], [IDL.Nat], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -117,6 +148,7 @@ export const idlService = IDL.Service({
   'heartbeatLiveViewer' : IDL.Func([IDL.Text], [], []),
   'incrementSiteViews' : IDL.Func([], [], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+  'markNotificationAsRead' : IDL.Func([IDL.Nat], [], []),
   'registerLiveViewer' : IDL.Func([IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
   'unregisterLiveViewer' : IDL.Func([IDL.Text], [], []),
@@ -145,9 +177,30 @@ export const idlFactory = ({ IDL }) => {
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
+  const Time = IDL.Int;
+  const NotificationPriority = IDL.Variant({
+    'low' : IDL.Null,
+    'normal' : IDL.Null,
+    'high' : IDL.Null,
+  });
+  const Notification = IDL.Record({
+    'id' : IDL.Nat,
+    'message' : IDL.Text,
+    'timestamp' : Time,
+    'priority' : NotificationPriority,
+    'isNew' : IDL.Bool,
+  });
+  const Gender = IDL.Variant({
+    'other' : IDL.Null,
+    'female' : IDL.Null,
+    'male' : IDL.Null,
+    'preferNotToSay' : IDL.Null,
+  });
   const UserProfile = IDL.Record({
+    'age' : IDL.Opt(IDL.Nat),
     'name' : IDL.Text,
     'email' : IDL.Opt(IDL.Text),
+    'gender' : Gender,
     'phone' : IDL.Opt(IDL.Text),
   });
   const Status = IDL.Variant({
@@ -155,7 +208,6 @@ export const idlFactory = ({ IDL }) => {
     'confirmed' : IDL.Null,
     'failed' : IDL.Null,
   });
-  const Time = IDL.Int;
   const Record__1 = IDL.Record({
     'id' : IDL.Text,
     'utr' : IDL.Text,
@@ -167,20 +219,24 @@ export const idlFactory = ({ IDL }) => {
   });
   const DonorProfile = IDL.Record({
     'id' : IDL.Text,
+    'age' : IDL.Opt(IDL.Nat),
     'principal' : IDL.Opt(IDL.Principal),
     'displayName' : IDL.Text,
     'joinedTimestamp' : Time,
     'email' : IDL.Opt(IDL.Text),
+    'gender' : Gender,
     'phone' : IDL.Text,
     'totalDonated' : IDL.Nat,
   });
   const DonorPublicProfile = IDL.Record({
     'id' : IDL.Text,
+    'age' : IDL.Opt(IDL.Nat),
     'principal' : IDL.Opt(IDL.Principal),
     'maskedPhone' : IDL.Text,
     'displayName' : IDL.Text,
     'joinedTimestamp' : Time,
     'email' : IDL.Opt(IDL.Text),
+    'gender' : Gender,
     'totalDonated' : IDL.Nat,
   });
   const Metrics = IDL.Record({
@@ -196,6 +252,7 @@ export const idlFactory = ({ IDL }) => {
   
   return IDL.Service({
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
+    'acknowledgeNotification' : IDL.Func([IDL.Nat], [], []),
     'addDonation' : IDL.Func([DonationInput], [IDL.Text], []),
     'addSpendingRecord' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Text], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
@@ -203,6 +260,11 @@ export const idlFactory = ({ IDL }) => {
     'confirmDonation' : IDL.Func([IDL.Text], [], []),
     'declineDonation' : IDL.Func([IDL.Text], [], []),
     'deleteSpendingRecord' : IDL.Func([IDL.Text], [], []),
+    'getAdminNotifications' : IDL.Func(
+        [IDL.Opt(IDL.Nat)],
+        [IDL.Vec(Notification)],
+        ['query'],
+      ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
     'getDonations' : IDL.Func(
@@ -236,6 +298,7 @@ export const idlFactory = ({ IDL }) => {
     'getTotalDonations' : IDL.Func([], [IDL.Nat], ['query']),
     'getTotalSpending' : IDL.Func([], [IDL.Nat], ['query']),
     'getTrustBalance' : IDL.Func([], [IDL.Int], ['query']),
+    'getUnreadNotificationCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -244,6 +307,7 @@ export const idlFactory = ({ IDL }) => {
     'heartbeatLiveViewer' : IDL.Func([IDL.Text], [], []),
     'incrementSiteViews' : IDL.Func([], [], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
+    'markNotificationAsRead' : IDL.Func([IDL.Nat], [], []),
     'registerLiveViewer' : IDL.Func([IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
     'unregisterLiveViewer' : IDL.Func([IDL.Text], [], []),

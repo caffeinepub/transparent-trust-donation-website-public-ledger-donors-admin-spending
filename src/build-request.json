@@ -1,51 +1,117 @@
 {
   "kind": "build_request",
-  "title": "Replace UPI QR code image with newly uploaded QR",
+  "title": "Expand post-login user profile form to collect name, age, optional email, phone, and gender",
   "priority": "normal",
   "requirements": [
     {
-      "id": "REQ-59",
-      "text": "Replace the currently used UPI QR static asset with the newly uploaded QR image, while keeping the frontend code and path unchanged so the app continues to load the QR from `UPI_QR_IMAGE_PATH` (`/assets/generated/upi-qr.dim_800x800.jpg`) as used by `frontend/src/utils/upiQrImage.ts` and rendered in `frontend/src/components/donate/UpiPaymentSection.tsx`. Store the replacement file at `frontend/public/assets/generated/upi-qr.dim_800x800.jpg`.",
+      "id": "REQ-1",
+      "text": "Update the post-login profile setup modal (currently `frontend/src/components/auth/ProfileSetupModal.tsx`) to collect and submit the following user profile fields: Name (required), Age (required), Email (optional), Phone number (required), Gender (required with a fixed set of options). Ensure all user-facing validation and error messages are in English.",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-4"
+          "msg-10",
+          "msg-14"
         ],
         "quotes": [
-          "this is the new QR"
+          "Add a form inside it , it should contain the question name , age , email( optional ), phone number, Gender , and other any useful data etc.",
+          "Try again"
         ]
       },
       "acceptanceCriteria": [
-        "`frontend/public/assets/generated/upi-qr.dim_800x800.jpg` is replaced with the newly uploaded QR image and is included in the deployed frontend build.",
-        "No code changes are required to reference the QR image; `frontend/src/utils/upiQrImage.ts` still exports `'/assets/generated/upi-qr.dim_800x800.jpg'`.",
-        "On the Donate flow, the QR image renders successfully in the UPI payment section without triggering the QR load error state.",
-        "Clicking “Open QR Full Size” opens the same updated QR image in a new tab."
+        "When an authenticated user has no saved profile, the modal opens and shows inputs for Name, Age, Email (optional), Phone number, and Gender.",
+        "Submitting with missing/invalid required fields shows English validation errors and does not call the save mutation.",
+        "Submitting valid data calls the existing `useSaveCallerUserProfile` mutation and shows a success toast in English.",
+        "Phone number is required in the profile modal (not optional) and is validated as an Indian +91 number (consistent with existing donation validation expectations).",
+        "Gender input is required and uses a controlled selection UI (e.g., select/radio group) with explicit options."
+      ]
+    },
+    {
+      "id": "REQ-2",
+      "text": "Extend the backend `UserProfile` type and profile persistence to store the additional fields collected by the updated profile modal: age and gender, while keeping email optional. Update `getCallerUserProfile`, `getUserProfile`, and `saveCallerUserProfile` to use the updated `UserProfile` type.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-10",
+          "msg-14"
+        ],
+        "quotes": [
+          "Add a form inside it , it should contain the question name , age , email( optional ), phone number, Gender , and other any useful data etc.",
+          "Try again"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Backend `UserProfile` includes fields for `name`, `age`, `gender`, `email` (optional), and `phone` (required or optional per chosen model, but must support the frontend requirement that profile capture includes a phone value).",
+        "`saveCallerUserProfile` persists the new fields and `getCallerUserProfile` returns them.",
+        "Authorization behavior remains unchanged (only permitted users can save/see their profile; admins can view others via existing rules)."
+      ]
+    },
+    {
+      "id": "REQ-3",
+      "text": "Add state migration logic for existing `userProfiles` entries so that canister upgrades do not break previously stored user profiles after adding new `UserProfile` fields. Populate new fields with safe defaults (e.g., unknown/empty) or `null` equivalents as appropriate for the new type.",
+      "target": "backend",
+      "source": {
+        "messageIds": [
+          "msg-10",
+          "msg-14"
+        ],
+        "quotes": [
+          "Add a form inside it , it should contain the question name , age , email( optional ), phone number, Gender , and other any useful data etc.",
+          "Try again"
+        ]
+      },
+      "acceptanceCriteria": [
+        "After upgrade, principals with an existing saved profile can still load their profile without traps.",
+        "New fields introduced by this change are present in the returned profile with the chosen default values when they were not previously stored.",
+        "New profiles saved after the change persist and load all fields correctly."
+      ]
+    },
+    {
+      "id": "REQ-4",
+      "text": "Ensure the donation flow continues to work with the updated user profile shape: `frontend/src/components/donate/DonationForm.tsx` should still prefill donor name/email/phone from the saved profile, and compilation/type-checking should succeed after updating the `UserProfile` type.",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-10",
+          "msg-14"
+        ],
+        "quotes": [
+          "Add a form inside it , it should contain the question name , age , email( optional ), phone number, Gender , and other any useful data etc.",
+          "Try again"
+        ]
+      },
+      "acceptanceCriteria": [
+        "Donation form still prefills `displayName`, `email`, and `phone` from the saved user profile when authenticated.",
+        "No runtime errors occur due to missing/renamed profile fields.",
+        "TypeScript build passes with the updated `UserProfile` type used in React Query hooks (`useGetCallerUserProfile`, `useSaveCallerUserProfile`)."
       ]
     }
   ],
   "constraints": [
-    "Use English for any user-facing text.",
-    "Do not change the `UPI_QR_IMAGE_PATH` value (`/assets/generated/upi-qr.dim_800x800.jpg`) or any other UPI configuration as part of this change.",
-    "Do not serve the QR image from the backend; it must remain a static frontend asset under `frontend/public/assets/generated`.",
-    "Do not modify files under `frontend/src/components/ui` or other immutable paths listed in SYSTEM_CONTEXT."
+    "Do not edit any files under `frontend/src/components/ui` (compose existing UI components instead).",
+    "Do not modify immutable hook files (`frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`).",
+    "Backend must remain a single Motoko actor in `backend/main.mo`; only add/modify `backend/migration.mo` if required for state upgrades."
   ],
   "nonGoals": [
-    "Changing the donation flow logic, UTR validation, or admin verification process.",
-    "Changing backend donation models or any Motoko canister logic.",
-    "Introducing new images beyond replacing the existing UPI QR asset."
+    "Do not add third-party authentication (Internet Identity remains the only auth method).",
+    "Do not add external databases or non-IC backend services.",
+    "Do not change the donation record schema to include age/gender unless explicitly requested later."
   ],
   "imageRequirements": {
     "required": [],
-    "edits": [
-      "Replace the UPI QR code image with the newly uploaded QR design (upi-qr.dim_800x800.jpg > upi-qr.dim_800x800.jpg)"
-    ]
+    "edits": []
   },
   "userProfileUpdate": {
-    "goalsToAdd": [],
+    "goalsToAdd": [
+      "Collect additional user details after Internet Identity login: name, age, optional email, phone number, and gender."
+    ],
     "goalsToRemove": [],
-    "preferencesToAdd": [],
+    "preferencesToAdd": [
+      "Use English for all user-facing UI text and validation messages."
+    ],
     "preferencesToRemove": [],
-    "miscToAdd": [],
+    "miscToAdd": [
+      "Known issue: previous build attempt failed with a configuration error; proceed with implementing the requested profile form changes."
+    ],
     "miscToRemove": [],
     "fieldsToSet": {},
     "fieldsToDelete": []

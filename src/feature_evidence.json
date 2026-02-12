@@ -2,9 +2,11 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-replace-the-currently-used-upi-qr-static-asset-with-the-newly-uploaded-qr-image-while-keeping-the-frontend-code-and-path-unchanged-so-the-app-continues-to-load-the-qr-from-upi-qr-image-path-assets-generated-upi-qr-dim-800x800-jpg-as-used-by-frontend-src-utils-upiqrimage-ts-and-rendered-in-frontend-src-components-donate-upipaymentsection-tsx-store-the-replacement-file-at-frontend-public-assets-generated-upi-qr-dim-800x800-jpg",
-      "featureTitle": "Replace the currently used UPI QR static asset with the newly uploaded QR image, while keeping the frontend code and path unchanged so the app continues to load the QR from `UPI_QR_IMAGE_PATH` (`/assets/generated/upi-qr.dim_800x800.jpg`) as used by `frontend/src/utils/upiQrImage.ts` and rendered in `frontend/src/components/donate/UpiPaymentSection.tsx`. Store the replacement file at `frontend/public/assets/generated/upi-qr.dim_800x800.jpg`.",
-      "files": [],
+      "featureId": "feature-update-the-post-login-profile-setup-modal-currently-frontend-src-components-auth-profilesetupmodal-tsx-to-collect-and-submit-the-following-user-profile-fields-name-required-age-required-email-optional-phone-number-required-gender-required-with-a-fixed-set-of-options-ensure-all-user-facing-validation-and-error-messages-are-in-english",
+      "featureTitle": "Update the post-login profile setup modal (currently `frontend/src/components/auth/ProfileSetupModal.tsx`) to collect and submit the following user profile fields: Name (required), Age (required), Email (optional), Phone number (required), Gender (required with a fixed set of options). Ensure all user-facing validation and error messages are in English.",
+      "files": [
+        "frontend/src/components/auth/ProfileSetupModal.tsx"
+      ],
       "components": [
         "authorization@4.0.0",
         "core-infrastructure@1.0.2",
@@ -14,7 +16,26 @@
         "github-export-icp-cli@1.0.0"
       ],
       "testIds": [
-        "REQ-59"
+        "REQ-1"
+      ],
+      "confidence": "high"
+    },
+    {
+      "featureId": "feature-ensure-the-donation-flow-continues-to-work-with-the-updated-user-profile-shape-frontend-src-components-donate-donationform-tsx-should-still-prefill-donor-name-email-phone-from-the-saved-profile-and-compilation-type-checking-should-succeed-after-updating-the-userprofile-type",
+      "featureTitle": "Ensure the donation flow continues to work with the updated user profile shape: `frontend/src/components/donate/DonationForm.tsx` should still prefill donor name/email/phone from the saved profile, and compilation/type-checking should succeed after updating the `UserProfile` type.",
+      "files": [
+        "frontend/src/components/donate/DonationForm.tsx"
+      ],
+      "components": [
+        "authorization@4.0.0",
+        "core-infrastructure@1.0.2",
+        "shadcn-ui@1.0.0",
+        "build-template-react@1.0.0",
+        "initial-app@1.0.0",
+        "github-export-icp-cli@1.0.0"
+      ],
+      "testIds": [
+        "REQ-4"
       ],
       "confidence": "high"
     }

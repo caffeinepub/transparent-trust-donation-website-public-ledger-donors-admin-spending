@@ -33,7 +33,7 @@ export default function DonatePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Scan the QR code or use the UPI ID to pay securely with any UPI app - Google Pay, PhonePe, Paytm, and more.
+                  Pay securely using the UPI ID with any UPI app - Google Pay, PhonePe, Paytm, and more.
                 </p>
               </CardContent>
             </Card>
@@ -80,7 +80,7 @@ export default function DonatePage() {
                   <div>
                     <p className="font-semibold text-base mb-1">Quick Payment Guide</p>
                     <p className="text-sm text-foreground/90">
-                      Scan the QR code or use the UPI ID to pay the exact amount, then enter your 12-digit UTR/Transaction ID from the payment confirmation to submit for verification.
+                      Use the UPI ID to pay the exact amount via any UPI app, then enter your 12-digit UTR/Transaction ID from the payment confirmation to submit for verification.
                     </p>
                   </div>
                 </div>
@@ -90,7 +90,7 @@ export default function DonatePage() {
                 <h3 className="font-semibold mb-2 text-sm">How it works:</h3>
                 <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
                   <li>Enter your mobile number (required) and donation amount in INR</li>
-                  <li>Scan the QR code or use the UPI ID to complete payment via any UPI app</li>
+                  <li>Use the UPI ID provided to complete payment via any UPI app</li>
                   <li>Enter your UPI Transaction ID (UTR) from the payment confirmation</li>
                   <li>Submit the form - our admin will verify and confirm your donation</li>
                 </ol>

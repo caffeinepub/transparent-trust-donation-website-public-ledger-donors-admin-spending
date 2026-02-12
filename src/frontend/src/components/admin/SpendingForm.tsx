@@ -41,12 +41,13 @@ export default function SpendingForm() {
         amount: amountInPaise,
         description: description.trim(),
       });
-      toast.success('Spending record added successfully');
+      toast.success('Spending recorded successfully. Your partner has been notified.');
       setAmount('');
       setDescription('');
     } catch (error) {
       console.error('Spending error:', error);
-      toast.error('Failed to add spending record');
+      const errorMessage = error instanceof Error ? error.message : 'Failed to add spending record';
+      toast.error(errorMessage);
     }
   };
 

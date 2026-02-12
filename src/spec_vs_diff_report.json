@@ -1,44 +1,26 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-11T14:23:54.149Z",
-  "summary": "BuildRequest REQ-59 asked only to replace the existing static UPI QR image file at a fixed path, with no code/config changes. The diff summary shows no modification of the QR asset file and instead updates project metadata/summaries describing many unrelated frontend changes.",
-  "missing_requirements": [
-    {
-      "id": "REQ-59",
-      "requirement": "Replace the static UPI QR asset at `frontend/public/assets/generated/upi-qr.dim_800x800.jpg` with the newly uploaded QR image while keeping the code/path unchanged (`/assets/generated/upi-qr.dim_800x800.jpg`).",
-      "reason": "The diff summary does not show any change to `frontend/public/assets/generated/upi-qr.dim_800x800.jpg` (only two non-asset files were modified). There is also no evidence in the provided diff summary that the QR image replacement occurred or that the build will include the updated asset.",
-      "evidence": [
-        "<file-diff>: Modified files list only includes `frontend-file-summaries.txt` and `project_state.json`; no mention of `frontend/public/assets/generated/upi-qr.dim_800x800.jpg`."
-      ]
-    }
-  ],
+  "generatedAt": "2026-02-12T09:30:49.661Z",
+  "summary": "Frontend profile setup modal was expanded to collect name, age, optional email, required Indian (+91) phone, and required gender with English validation/toasts. Backend UserProfile type and profile APIs were extended to include age and gender, and a migration module was added and wired into the Motoko actor. Donation form was updated to keep prefilling name/email/phone from the profile.",
+  "missing_requirements": [],
   "hallucinated_features": [
     {
-      "description": "Unrelated frontend route/layout/admin-portal changes (TanStack Router route trees, AdminLayout/Admin routes, AdminGuard, access denied screen, etc.).",
-      "reason": "Not requested by REQ-59, which explicitly scoped the change to replacing a static QR image asset and avoiding donation flow/backend/config changes.",
+      "description": "Extended donor profile schema to include age and gender (and migrated existing donorProfiles accordingly), which was not requested by the BuildRequest (only UserProfile needed age/gender; donation record schema explicitly should not change).",
+      "reason": "BuildRequest REQ-2 only asks to extend backend UserProfile and related APIs; REQ-3 asks to migrate existing userProfiles. The diff adds age/gender to Donor.Profile and Donor.PublicProfile and migrates donorProfiles as well.",
       "evidence": [
-        "frontend-file-summaries.txt (truncated): entries for `frontend/src/App.tsx`, `frontend/src/components/auth/AdminGuard.tsx`, `frontend/src/components/feedback/AccessDeniedScreen.tsx`, and multiple admin-related pages/routes."
-      ]
-    },
-    {
-      "description": "Unrelated changes to donation page content and other public pages (dashboard, ledger, donors, donor detail, transaction detail) and React Query hooks behavior.",
-      "reason": "Not requested by REQ-59; these are functional/UI changes beyond replacing an image asset.",
-      "evidence": [
-        "frontend-file-summaries.txt (truncated): entries for `frontend/src/pages/DonatePage.tsx`, `frontend/src/pages/DashboardPage.tsx`, `frontend/src/pages/LedgerPage.tsx`, `frontend/src/pages/DonorsPage.tsx`, `frontend/src/pages/DonorDetailPage.tsx`, `frontend/src/pages/TransactionDetailPage.tsx`, `frontend/src/hooks/useQueries.ts`, `frontend/src/hooks/useAdminStatus.ts`."
-      ]
-    },
-    {
-      "description": "Project metadata/state update unrelated to QR asset replacement (project_state.json version/summary/features list).",
-      "reason": "REQ-59 did not request any project state/schema/feature registry changes.",
-      "evidence": [
-        "project_state.json (truncated): `projectStateVersion`: 43 and large `existing_features` list shown/updated."
+        "backend/main.mo (Donor.Profile and Donor.PublicProfile add age:?Nat and gender:Gender; UserProfile uses Donor.Gender)",
+        "backend/migration.mo (NewDonorProfile includes age and gender; run() maps old.donorProfiles to include defaults)"
       ]
     }
   ],
-  "confidence": 0.72,
+  "confidence": 0.74,
   "changed_files": [
+    "backend/main.mo",
+    "backend/migration.mo",
     "frontend-file-summaries.txt",
+    "frontend/src/components/auth/ProfileSetupModal.tsx",
+    "frontend/src/components/donate/DonationForm.tsx",
     "project_state.json"
   ]
 }

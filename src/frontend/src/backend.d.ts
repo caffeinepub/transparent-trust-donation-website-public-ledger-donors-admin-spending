@@ -19,11 +19,13 @@ export interface DonationInput {
 export type Time = bigint;
 export interface DonorPublicProfile {
     id: string;
+    age?: bigint;
     principal?: Principal;
     maskedPhone: string;
     displayName: string;
     joinedTimestamp: Time;
     email?: string;
+    gender: Gender;
     totalDonated: bigint;
 }
 export interface Record_ {
@@ -31,6 +33,13 @@ export interface Record_ {
     description: string;
     timestamp: Time;
     amount: bigint;
+}
+export interface Notification {
+    id: bigint;
+    message: string;
+    timestamp: Time;
+    priority: NotificationPriority;
+    isNew: boolean;
 }
 export interface Record__1 {
     id: string;
@@ -43,21 +52,36 @@ export interface Record__1 {
 }
 export interface DonorProfile {
     id: string;
+    age?: bigint;
     principal?: Principal;
     displayName: string;
     joinedTimestamp: Time;
     email?: string;
+    gender: Gender;
     phone: string;
     totalDonated: bigint;
 }
 export interface UserProfile {
+    age?: bigint;
     name: string;
     email?: string;
+    gender: Gender;
     phone?: string;
 }
 export interface Metrics {
     totalSiteViews: bigint;
     currentLiveViewers: bigint;
+}
+export enum Gender {
+    other = "other",
+    female = "female",
+    male = "male",
+    preferNotToSay = "preferNotToSay"
+}
+export enum NotificationPriority {
+    low = "low",
+    normal = "normal",
+    high = "high"
 }
 export enum Status {
     pending = "pending",
@@ -70,6 +94,7 @@ export enum UserRole {
     guest = "guest"
 }
 export interface backendInterface {
+    acknowledgeNotification(notificationId: bigint): Promise<void>;
     addDonation(donationInput: DonationInput): Promise<string>;
     addSpendingRecord(amount: bigint, description: string): Promise<string>;
     assignCallerUserRole(user: Principal, role: UserRole): Promise<void>;
@@ -77,6 +102,7 @@ export interface backendInterface {
     confirmDonation(donationId: string): Promise<void>;
     declineDonation(donationId: string): Promise<void>;
     deleteSpendingRecord(id: string): Promise<void>;
+    getAdminNotifications(limit: bigint | null): Promise<Array<Notification>>;
     getCallerUserProfile(): Promise<UserProfile | null>;
     getCallerUserRole(): Promise<UserRole>;
     getDonations(limit: bigint, offset: bigint): Promise<Array<Record__1>>;
@@ -90,10 +116,12 @@ export interface backendInterface {
     getTotalDonations(): Promise<bigint>;
     getTotalSpending(): Promise<bigint>;
     getTrustBalance(): Promise<bigint>;
+    getUnreadNotificationCount(): Promise<bigint>;
     getUserProfile(user: Principal): Promise<UserProfile | null>;
     heartbeatLiveViewer(sessionId: string): Promise<void>;
     incrementSiteViews(): Promise<void>;
     isCallerAdmin(): Promise<boolean>;
+    markNotificationAsRead(notificationId: bigint): Promise<void>;
     registerLiveViewer(sessionId: string): Promise<void>;
     saveCallerUserProfile(profile: UserProfile): Promise<void>;
     unregisterLiveViewer(sessionId: string): Promise<void>;

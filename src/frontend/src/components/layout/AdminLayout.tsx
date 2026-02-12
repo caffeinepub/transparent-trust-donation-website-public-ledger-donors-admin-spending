@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Shield, LayoutDashboard, DollarSign, TrendingUp, Home, Menu, X } from 'lucide-react';
 import AdminGuard from '../auth/AdminGuard';
 import LoginButton from '../auth/LoginButton';
+import AdminNotifications from '../admin/AdminNotifications';
 import { useState } from 'react';
 
 export default function AdminLayout() {
@@ -56,7 +57,8 @@ function AdminLayoutContent() {
               </Link>
             </nav>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2">
+              <AdminNotifications />
               <Button 
                 variant="outline"
                 onClick={() => navigate({ to: '/' })}
