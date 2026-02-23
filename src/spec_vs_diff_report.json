@@ -1,26 +1,14 @@
 {
   "kind": "spec_vs_diff_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T09:30:49.661Z",
-  "summary": "Frontend profile setup modal was expanded to collect name, age, optional email, required Indian (+91) phone, and required gender with English validation/toasts. Backend UserProfile type and profile APIs were extended to include age and gender, and a migration module was added and wired into the Motoko actor. Donation form was updated to keep prefilling name/email/phone from the profile.",
+  "generatedAt": "2026-02-23T12:01:55.425Z",
+  "summary": "The BuildRequest requirement has been successfully implemented. The Google site verification meta tag with the exact specified content has been added to frontend/index.html within the <head> section, before the <body> tag. No missing requirements or hallucinated features detected.",
   "missing_requirements": [],
-  "hallucinated_features": [
-    {
-      "description": "Extended donor profile schema to include age and gender (and migrated existing donorProfiles accordingly), which was not requested by the BuildRequest (only UserProfile needed age/gender; donation record schema explicitly should not change).",
-      "reason": "BuildRequest REQ-2 only asks to extend backend UserProfile and related APIs; REQ-3 asks to migrate existing userProfiles. The diff adds age/gender to Donor.Profile and Donor.PublicProfile and migrates donorProfiles as well.",
-      "evidence": [
-        "backend/main.mo (Donor.Profile and Donor.PublicProfile add age:?Nat and gender:Gender; UserProfile uses Donor.Gender)",
-        "backend/migration.mo (NewDonorProfile includes age and gender; run() maps old.donorProfiles to include defaults)"
-      ]
-    }
-  ],
-  "confidence": 0.74,
+  "hallucinated_features": [],
+  "confidence": 0.95,
   "changed_files": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "frontend-file-summaries.txt",
-    "frontend/src/components/auth/ProfileSetupModal.tsx",
-    "frontend/src/components/donate/DonationForm.tsx",
+    "frontend/index.html",
     "project_state.json"
   ]
 }

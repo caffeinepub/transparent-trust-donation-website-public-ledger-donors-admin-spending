@@ -1,70 +1,34 @@
 {
   "kind": "coverage_report",
   "version": "1.0",
-  "generatedAt": "2026-02-12T09:30:49.664Z",
+  "generatedAt": "2026-02-23T12:01:55.429Z",
   "sources": {
     "buildRequest": true,
     "implementationPlan": true
   },
   "requirements": {
-    "total": 4,
-    "implemented": 2,
+    "total": 1,
+    "implemented": 1,
     "items": [
       {
         "id": "REQ-1",
-        "summary": "Update the post-login profile setup modal (currently `frontend/src/components/auth/ProfileSetupModal.tsx`) to collect and submit the following user profile fields: Name (required), Age (required), Email (optional), Phone number (required), Gender (required with a fixed set of options). Ensure all user-facing validation and error messages are in English.",
+        "summary": "Add the Google site verification meta tag '<meta name=\"google-site-verification\" content=\"BDqzMIYR_Iw59Cw7LJqSVoMEfTtuBlNF0hxcBC7095w\" />' to the <head> section of frontend/index.html, positioning it before the first <body> section",
         "status": "implemented",
         "plannedFiles": [
-          "frontend/src/components/auth/ProfileSetupModal.tsx",
-          "frontend/src/utils/donationInputNormalization.ts",
-          "frontend/src/backend.d.ts"
+          "frontend/index.html"
         ],
         "matchedFiles": [
-          "frontend/src/components/auth/ProfileSetupModal.tsx",
-          "frontend/src/backend.d.ts"
-        ]
-      },
-      {
-        "id": "REQ-2",
-        "summary": "Extend the backend `UserProfile` type and profile persistence to store the additional fields collected by the updated profile modal: age and gender, while keeping email optional. Update `getCallerUserProfile`, `getUserProfile`, and `saveCallerUserProfile` to use the updated `UserProfile` type.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-3",
-        "summary": "Add state migration logic for existing `userProfiles` entries so that canister upgrades do not break previously stored user profiles after adding new `UserProfile` fields. Populate new fields with safe defaults (e.g., unknown/empty) or `null` equivalents as appropriate for the new type.",
-        "status": "unknown",
-        "plannedFiles": [],
-        "matchedFiles": []
-      },
-      {
-        "id": "REQ-4",
-        "summary": "Ensure the donation flow continues to work with the updated user profile shape: `frontend/src/components/donate/DonationForm.tsx` should still prefill donor name/email/phone from the saved profile, and compilation/type-checking should succeed after updating the `UserProfile` type.",
-        "status": "implemented",
-        "plannedFiles": [
-          "frontend/src/components/donate/DonationForm.tsx",
-          "frontend/src/hooks/useQueries.ts"
-        ],
-        "matchedFiles": [
-          "frontend/src/components/donate/DonationForm.tsx"
+          "frontend/index.html"
         ]
       }
     ]
   },
   "changedFiles": [
-    "backend/main.mo",
-    "backend/migration.mo",
     "build-request.json",
     "feature_evidence.json",
     "frontend-file-summaries.txt",
     "frontend-implementation-plan.json",
-    "frontend/src/backend.d.ts",
-    "frontend/src/backend.ts",
-    "frontend/src/components/auth/ProfileSetupModal.tsx",
-    "frontend/src/components/donate/DonationForm.tsx",
-    "frontend/src/declarations/backend.did.d.ts",
-    "frontend/src/declarations/backend.did.js",
+    "frontend/index.html",
     "project_state.json",
     "scratch/component-selection.json",
     "spec.md",

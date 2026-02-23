@@ -8,32 +8,32 @@
 
 import { IDL } from '@icp-sdk/core/candid';
 
-export const DonationInput = IDL.Record({
-  'utr' : IDL.Text,
-  'displayName' : IDL.Text,
-  'donorId' : IDL.Text,
-  'description' : IDL.Text,
-  'email' : IDL.Opt(IDL.Text),
-  'phone' : IDL.Text,
-  'amount' : IDL.Nat,
+export const _CaffeineStorageCreateCertificateResult = IDL.Record({
+  'method' : IDL.Text,
+  'blob_hash' : IDL.Text,
 });
+export const _CaffeineStorageRefillInformation = IDL.Record({
+  'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+});
+export const _CaffeineStorageRefillResult = IDL.Record({
+  'success' : IDL.Opt(IDL.Bool),
+  'topped_up_amount' : IDL.Opt(IDL.Nat),
+});
+export const ExternalBlob = IDL.Vec(IDL.Nat8);
 export const UserRole = IDL.Variant({
   'admin' : IDL.Null,
   'user' : IDL.Null,
   'guest' : IDL.Null,
 });
 export const Time = IDL.Int;
-export const NotificationPriority = IDL.Variant({
-  'low' : IDL.Null,
-  'normal' : IDL.Null,
-  'high' : IDL.Null,
-});
-export const Notification = IDL.Record({
-  'id' : IDL.Nat,
-  'message' : IDL.Text,
+export const ActivityEntry = IDL.Record({
+  'id' : IDL.Text,
+  'title' : IDL.Text,
+  'description' : IDL.Text,
+  'author' : IDL.Text,
+  'notes' : IDL.Opt(IDL.Text),
   'timestamp' : Time,
-  'priority' : NotificationPriority,
-  'isNew' : IDL.Bool,
+  'images' : IDL.Vec(ExternalBlob),
 });
 export const Gender = IDL.Variant({
   'other' : IDL.Null,
@@ -48,6 +48,31 @@ export const UserProfile = IDL.Record({
   'gender' : Gender,
   'phone' : IDL.Opt(IDL.Text),
 });
+export const InquiryType = IDL.Variant({
+  'donationQuestion' : IDL.Null,
+  'other' : IDL.Null,
+  'collaborationProposal' : IDL.Null,
+  'feedbackSuggestion' : IDL.Null,
+  'general' : IDL.Null,
+  'serviceOffer' : IDL.Null,
+});
+export const ContactFormEntry = IDL.Record({
+  'id' : IDL.Text,
+  'inquiryType' : InquiryType,
+  'name' : IDL.Text,
+  'submittedBy' : IDL.Opt(IDL.Principal),
+  'email' : IDL.Text,
+  'replyStatus' : IDL.Variant({
+    'closed' : IDL.Null,
+    'notReplied' : IDL.Null,
+    'pendingResponse' : IDL.Null,
+    'replied' : IDL.Null,
+  }),
+  'message' : IDL.Text,
+  'timestamp' : Time,
+  'phone' : IDL.Text,
+  'adminNotes' : IDL.Opt(IDL.Text),
+});
 export const Status = IDL.Variant({
   'pending' : IDL.Null,
   'confirmed' : IDL.Null,
@@ -55,12 +80,20 @@ export const Status = IDL.Variant({
 });
 export const Record__1 = IDL.Record({
   'id' : IDL.Text,
-  'utr' : IDL.Text,
   'status' : Status,
+  'paymentScreenshot' : IDL.Opt(ExternalBlob),
   'donorId' : IDL.Text,
   'description' : IDL.Text,
+  'proverbId' : IDL.Opt(IDL.Nat),
+  'donorGender' : Gender,
   'timestamp' : Time,
   'amount' : IDL.Nat,
+  'proverbFeedback' : IDL.Opt(IDL.Bool),
+});
+export const PrivacyLevel = IDL.Variant({
+  'publicView' : IDL.Null,
+  'strictlyConfidential' : IDL.Null,
+  'anonymous' : IDL.Null,
 });
 export const DonorProfile = IDL.Record({
   'id' : IDL.Text,
@@ -68,6 +101,7 @@ export const DonorProfile = IDL.Record({
   'principal' : IDL.Opt(IDL.Principal),
   'displayName' : IDL.Text,
   'joinedTimestamp' : Time,
+  'privacyLevel' : PrivacyLevel,
   'email' : IDL.Opt(IDL.Text),
   'gender' : Gender,
   'phone' : IDL.Text,
@@ -96,22 +130,70 @@ export const Record = IDL.Record({
 });
 
 export const idlService = IDL.Service({
+  '_caffeineStorageBlobIsLive' : IDL.Func(
+      [IDL.Vec(IDL.Nat8)],
+      [IDL.Bool],
+      ['query'],
+    ),
+  '_caffeineStorageBlobsToDelete' : IDL.Func(
+      [],
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      ['query'],
+    ),
+  '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+      [IDL.Vec(IDL.Vec(IDL.Nat8))],
+      [],
+      [],
+    ),
+  '_caffeineStorageCreateCertificate' : IDL.Func(
+      [IDL.Text],
+      [_CaffeineStorageCreateCertificateResult],
+      [],
+    ),
+  '_caffeineStorageRefillCashier' : IDL.Func(
+      [IDL.Opt(_CaffeineStorageRefillInformation)],
+      [_CaffeineStorageRefillResult],
+      [],
+    ),
+  '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
   '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-  'acknowledgeNotification' : IDL.Func([IDL.Nat], [], []),
-  'addDonation' : IDL.Func([DonationInput], [IDL.Text], []),
+  'addServiceActivity' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Vec(ExternalBlob), IDL.Text, IDL.Opt(IDL.Text)],
+      [IDL.Text],
+      [],
+    ),
   'addSpendingRecord' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Text], []),
   'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
   'confirmAllPendingDonations' : IDL.Func([], [], []),
   'confirmDonation' : IDL.Func([IDL.Text], [], []),
   'declineDonation' : IDL.Func([IDL.Text], [], []),
+  'deleteServiceActivity' : IDL.Func([IDL.Text], [], []),
   'deleteSpendingRecord' : IDL.Func([IDL.Text], [], []),
-  'getAdminNotifications' : IDL.Func(
-      [IDL.Opt(IDL.Nat)],
-      [IDL.Vec(Notification)],
+  'getAllProverbs' : IDL.Func(
+      [],
+      [
+        IDL.Vec(
+          IDL.Record({
+            'id' : IDL.Text,
+            'text' : IDL.Text,
+            'author' : IDL.Text,
+          })
+        ),
+      ],
+      ['query'],
+    ),
+  'getAllServiceActivities' : IDL.Func(
+      [IDL.Nat, IDL.Nat],
+      [IDL.Vec(ActivityEntry)],
       ['query'],
     ),
   'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
   'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+  'getContactFormEntries' : IDL.Func(
+      [],
+      [IDL.Vec(ContactFormEntry)],
+      ['query'],
+    ),
   'getDonations' : IDL.Func(
       [IDL.Nat, IDL.Nat],
       [IDL.Vec(Record__1)],
@@ -130,7 +212,30 @@ export const idlService = IDL.Service({
       [IDL.Vec(DonorPublicProfile)],
       ['query'],
     ),
-  'getSiteMetrics' : IDL.Func([], [Metrics], ['query']),
+  'getProverbsForDonation' : IDL.Func(
+      [IDL.Text],
+      [
+        IDL.Vec(
+          IDL.Record({
+            'id' : IDL.Text,
+            'text' : IDL.Text,
+            'author' : IDL.Text,
+          })
+        ),
+      ],
+      ['query'],
+    ),
+  'getServiceActivitiesByRecentDays' : IDL.Func(
+      [IDL.Nat],
+      [IDL.Vec(ActivityEntry)],
+      ['query'],
+    ),
+  'getServiceActivity' : IDL.Func(
+      [IDL.Text],
+      [IDL.Opt(ActivityEntry)],
+      ['query'],
+    ),
+  'getSiteMetrics' : IDL.Func([], [Metrics], []),
   'getSpendingRecords' : IDL.Func(
       [IDL.Nat, IDL.Nat],
       [IDL.Vec(Record)],
@@ -139,7 +244,6 @@ export const idlService = IDL.Service({
   'getTotalDonations' : IDL.Func([], [IDL.Nat], ['query']),
   'getTotalSpending' : IDL.Func([], [IDL.Nat], ['query']),
   'getTrustBalance' : IDL.Func([], [IDL.Int], ['query']),
-  'getUnreadNotificationCount' : IDL.Func([], [IDL.Nat], ['query']),
   'getUserProfile' : IDL.Func(
       [IDL.Principal],
       [IDL.Opt(UserProfile)],
@@ -148,12 +252,48 @@ export const idlService = IDL.Service({
   'heartbeatLiveViewer' : IDL.Func([IDL.Text], [], []),
   'incrementSiteViews' : IDL.Func([], [], []),
   'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-  'markNotificationAsRead' : IDL.Func([IDL.Nat], [], []),
+  'recordProverbFeedback' : IDL.Func([IDL.Text, IDL.Bool], [], []),
   'registerLiveViewer' : IDL.Func([IDL.Text], [], []),
   'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+  'searchServiceActivitiesByTitle' : IDL.Func(
+      [IDL.Text],
+      [IDL.Vec(ActivityEntry)],
+      ['query'],
+    ),
+  'selectProverbForDonation' : IDL.Func([IDL.Text, IDL.Nat], [], []),
+  'submitContactForm' : IDL.Func(
+      [IDL.Text, IDL.Text, IDL.Text, IDL.Text, InquiryType],
+      [IDL.Text],
+      [],
+    ),
+  'submitDonation' : IDL.Func(
+      [
+        IDL.Text,
+        IDL.Nat,
+        IDL.Text,
+        IDL.Text,
+        IDL.Opt(IDL.Text),
+        IDL.Text,
+        IDL.Opt(ExternalBlob),
+      ],
+      [IDL.Text],
+      [],
+    ),
   'unregisterLiveViewer' : IDL.Func([IDL.Text], [], []),
   'updateDonorProfileAdmin' : IDL.Func(
       [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Text],
+      [],
+      [],
+    ),
+  'updateServiceActivity' : IDL.Func(
+      [
+        IDL.Text,
+        IDL.Text,
+        IDL.Text,
+        IDL.Vec(ExternalBlob),
+        IDL.Text,
+        IDL.Opt(IDL.Text),
+      ],
       [],
       [],
     ),
@@ -163,32 +303,32 @@ export const idlService = IDL.Service({
 export const idlInitArgs = [];
 
 export const idlFactory = ({ IDL }) => {
-  const DonationInput = IDL.Record({
-    'utr' : IDL.Text,
-    'displayName' : IDL.Text,
-    'donorId' : IDL.Text,
-    'description' : IDL.Text,
-    'email' : IDL.Opt(IDL.Text),
-    'phone' : IDL.Text,
-    'amount' : IDL.Nat,
+  const _CaffeineStorageCreateCertificateResult = IDL.Record({
+    'method' : IDL.Text,
+    'blob_hash' : IDL.Text,
   });
+  const _CaffeineStorageRefillInformation = IDL.Record({
+    'proposed_top_up_amount' : IDL.Opt(IDL.Nat),
+  });
+  const _CaffeineStorageRefillResult = IDL.Record({
+    'success' : IDL.Opt(IDL.Bool),
+    'topped_up_amount' : IDL.Opt(IDL.Nat),
+  });
+  const ExternalBlob = IDL.Vec(IDL.Nat8);
   const UserRole = IDL.Variant({
     'admin' : IDL.Null,
     'user' : IDL.Null,
     'guest' : IDL.Null,
   });
   const Time = IDL.Int;
-  const NotificationPriority = IDL.Variant({
-    'low' : IDL.Null,
-    'normal' : IDL.Null,
-    'high' : IDL.Null,
-  });
-  const Notification = IDL.Record({
-    'id' : IDL.Nat,
-    'message' : IDL.Text,
+  const ActivityEntry = IDL.Record({
+    'id' : IDL.Text,
+    'title' : IDL.Text,
+    'description' : IDL.Text,
+    'author' : IDL.Text,
+    'notes' : IDL.Opt(IDL.Text),
     'timestamp' : Time,
-    'priority' : NotificationPriority,
-    'isNew' : IDL.Bool,
+    'images' : IDL.Vec(ExternalBlob),
   });
   const Gender = IDL.Variant({
     'other' : IDL.Null,
@@ -203,6 +343,31 @@ export const idlFactory = ({ IDL }) => {
     'gender' : Gender,
     'phone' : IDL.Opt(IDL.Text),
   });
+  const InquiryType = IDL.Variant({
+    'donationQuestion' : IDL.Null,
+    'other' : IDL.Null,
+    'collaborationProposal' : IDL.Null,
+    'feedbackSuggestion' : IDL.Null,
+    'general' : IDL.Null,
+    'serviceOffer' : IDL.Null,
+  });
+  const ContactFormEntry = IDL.Record({
+    'id' : IDL.Text,
+    'inquiryType' : InquiryType,
+    'name' : IDL.Text,
+    'submittedBy' : IDL.Opt(IDL.Principal),
+    'email' : IDL.Text,
+    'replyStatus' : IDL.Variant({
+      'closed' : IDL.Null,
+      'notReplied' : IDL.Null,
+      'pendingResponse' : IDL.Null,
+      'replied' : IDL.Null,
+    }),
+    'message' : IDL.Text,
+    'timestamp' : Time,
+    'phone' : IDL.Text,
+    'adminNotes' : IDL.Opt(IDL.Text),
+  });
   const Status = IDL.Variant({
     'pending' : IDL.Null,
     'confirmed' : IDL.Null,
@@ -210,12 +375,20 @@ export const idlFactory = ({ IDL }) => {
   });
   const Record__1 = IDL.Record({
     'id' : IDL.Text,
-    'utr' : IDL.Text,
     'status' : Status,
+    'paymentScreenshot' : IDL.Opt(ExternalBlob),
     'donorId' : IDL.Text,
     'description' : IDL.Text,
+    'proverbId' : IDL.Opt(IDL.Nat),
+    'donorGender' : Gender,
     'timestamp' : Time,
     'amount' : IDL.Nat,
+    'proverbFeedback' : IDL.Opt(IDL.Bool),
+  });
+  const PrivacyLevel = IDL.Variant({
+    'publicView' : IDL.Null,
+    'strictlyConfidential' : IDL.Null,
+    'anonymous' : IDL.Null,
   });
   const DonorProfile = IDL.Record({
     'id' : IDL.Text,
@@ -223,6 +396,7 @@ export const idlFactory = ({ IDL }) => {
     'principal' : IDL.Opt(IDL.Principal),
     'displayName' : IDL.Text,
     'joinedTimestamp' : Time,
+    'privacyLevel' : PrivacyLevel,
     'email' : IDL.Opt(IDL.Text),
     'gender' : Gender,
     'phone' : IDL.Text,
@@ -251,22 +425,76 @@ export const idlFactory = ({ IDL }) => {
   });
   
   return IDL.Service({
+    '_caffeineStorageBlobIsLive' : IDL.Func(
+        [IDL.Vec(IDL.Nat8)],
+        [IDL.Bool],
+        ['query'],
+      ),
+    '_caffeineStorageBlobsToDelete' : IDL.Func(
+        [],
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        ['query'],
+      ),
+    '_caffeineStorageConfirmBlobDeletion' : IDL.Func(
+        [IDL.Vec(IDL.Vec(IDL.Nat8))],
+        [],
+        [],
+      ),
+    '_caffeineStorageCreateCertificate' : IDL.Func(
+        [IDL.Text],
+        [_CaffeineStorageCreateCertificateResult],
+        [],
+      ),
+    '_caffeineStorageRefillCashier' : IDL.Func(
+        [IDL.Opt(_CaffeineStorageRefillInformation)],
+        [_CaffeineStorageRefillResult],
+        [],
+      ),
+    '_caffeineStorageUpdateGatewayPrincipals' : IDL.Func([], [], []),
     '_initializeAccessControlWithSecret' : IDL.Func([IDL.Text], [], []),
-    'acknowledgeNotification' : IDL.Func([IDL.Nat], [], []),
-    'addDonation' : IDL.Func([DonationInput], [IDL.Text], []),
+    'addServiceActivity' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Vec(ExternalBlob),
+          IDL.Text,
+          IDL.Opt(IDL.Text),
+        ],
+        [IDL.Text],
+        [],
+      ),
     'addSpendingRecord' : IDL.Func([IDL.Nat, IDL.Text], [IDL.Text], []),
     'assignCallerUserRole' : IDL.Func([IDL.Principal, UserRole], [], []),
     'confirmAllPendingDonations' : IDL.Func([], [], []),
     'confirmDonation' : IDL.Func([IDL.Text], [], []),
     'declineDonation' : IDL.Func([IDL.Text], [], []),
+    'deleteServiceActivity' : IDL.Func([IDL.Text], [], []),
     'deleteSpendingRecord' : IDL.Func([IDL.Text], [], []),
-    'getAdminNotifications' : IDL.Func(
-        [IDL.Opt(IDL.Nat)],
-        [IDL.Vec(Notification)],
+    'getAllProverbs' : IDL.Func(
+        [],
+        [
+          IDL.Vec(
+            IDL.Record({
+              'id' : IDL.Text,
+              'text' : IDL.Text,
+              'author' : IDL.Text,
+            })
+          ),
+        ],
+        ['query'],
+      ),
+    'getAllServiceActivities' : IDL.Func(
+        [IDL.Nat, IDL.Nat],
+        [IDL.Vec(ActivityEntry)],
         ['query'],
       ),
     'getCallerUserProfile' : IDL.Func([], [IDL.Opt(UserProfile)], ['query']),
     'getCallerUserRole' : IDL.Func([], [UserRole], ['query']),
+    'getContactFormEntries' : IDL.Func(
+        [],
+        [IDL.Vec(ContactFormEntry)],
+        ['query'],
+      ),
     'getDonations' : IDL.Func(
         [IDL.Nat, IDL.Nat],
         [IDL.Vec(Record__1)],
@@ -289,7 +517,30 @@ export const idlFactory = ({ IDL }) => {
         [IDL.Vec(DonorPublicProfile)],
         ['query'],
       ),
-    'getSiteMetrics' : IDL.Func([], [Metrics], ['query']),
+    'getProverbsForDonation' : IDL.Func(
+        [IDL.Text],
+        [
+          IDL.Vec(
+            IDL.Record({
+              'id' : IDL.Text,
+              'text' : IDL.Text,
+              'author' : IDL.Text,
+            })
+          ),
+        ],
+        ['query'],
+      ),
+    'getServiceActivitiesByRecentDays' : IDL.Func(
+        [IDL.Nat],
+        [IDL.Vec(ActivityEntry)],
+        ['query'],
+      ),
+    'getServiceActivity' : IDL.Func(
+        [IDL.Text],
+        [IDL.Opt(ActivityEntry)],
+        ['query'],
+      ),
+    'getSiteMetrics' : IDL.Func([], [Metrics], []),
     'getSpendingRecords' : IDL.Func(
         [IDL.Nat, IDL.Nat],
         [IDL.Vec(Record)],
@@ -298,7 +549,6 @@ export const idlFactory = ({ IDL }) => {
     'getTotalDonations' : IDL.Func([], [IDL.Nat], ['query']),
     'getTotalSpending' : IDL.Func([], [IDL.Nat], ['query']),
     'getTrustBalance' : IDL.Func([], [IDL.Int], ['query']),
-    'getUnreadNotificationCount' : IDL.Func([], [IDL.Nat], ['query']),
     'getUserProfile' : IDL.Func(
         [IDL.Principal],
         [IDL.Opt(UserProfile)],
@@ -307,12 +557,48 @@ export const idlFactory = ({ IDL }) => {
     'heartbeatLiveViewer' : IDL.Func([IDL.Text], [], []),
     'incrementSiteViews' : IDL.Func([], [], []),
     'isCallerAdmin' : IDL.Func([], [IDL.Bool], ['query']),
-    'markNotificationAsRead' : IDL.Func([IDL.Nat], [], []),
+    'recordProverbFeedback' : IDL.Func([IDL.Text, IDL.Bool], [], []),
     'registerLiveViewer' : IDL.Func([IDL.Text], [], []),
     'saveCallerUserProfile' : IDL.Func([UserProfile], [], []),
+    'searchServiceActivitiesByTitle' : IDL.Func(
+        [IDL.Text],
+        [IDL.Vec(ActivityEntry)],
+        ['query'],
+      ),
+    'selectProverbForDonation' : IDL.Func([IDL.Text, IDL.Nat], [], []),
+    'submitContactForm' : IDL.Func(
+        [IDL.Text, IDL.Text, IDL.Text, IDL.Text, InquiryType],
+        [IDL.Text],
+        [],
+      ),
+    'submitDonation' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Nat,
+          IDL.Text,
+          IDL.Text,
+          IDL.Opt(IDL.Text),
+          IDL.Text,
+          IDL.Opt(ExternalBlob),
+        ],
+        [IDL.Text],
+        [],
+      ),
     'unregisterLiveViewer' : IDL.Func([IDL.Text], [], []),
     'updateDonorProfileAdmin' : IDL.Func(
         [IDL.Text, IDL.Text, IDL.Opt(IDL.Text), IDL.Text],
+        [],
+        [],
+      ),
+    'updateServiceActivity' : IDL.Func(
+        [
+          IDL.Text,
+          IDL.Text,
+          IDL.Text,
+          IDL.Vec(ExternalBlob),
+          IDL.Text,
+          IDL.Opt(IDL.Text),
+        ],
         [],
         [],
       ),

@@ -1,7 +1,8 @@
 import { useNavigate } from '@tanstack/react-router';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatINR } from '@/utils/formatCurrency';
+import { DONOR_AVATAR_IMAGE_PATH } from '@/utils/donorAvatarImage';
 
 interface DonorProfile {
   id: string;
@@ -57,6 +58,10 @@ export default function DonorsTable({ donors }: DonorsTableProps) {
               <TableCell>
                 <div className="flex items-center gap-3">
                   <Avatar>
+                    <AvatarImage 
+                      src={DONOR_AVATAR_IMAGE_PATH} 
+                      alt={`${donor.displayName || 'Anonymous'} profile`}
+                    />
                     <AvatarFallback className="bg-primary/10 text-primary">
                       {getInitials(donor.displayName || 'Anonymous')}
                     </AvatarFallback>

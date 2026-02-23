@@ -45,7 +45,7 @@ export default function DonatePage() {
               </CardHeader>
               <CardContent>
                 <p className="text-sm text-muted-foreground">
-                  Every donation is verified by our admin team using your UPI Transaction ID (UTR) for complete transparency.
+                  Every donation is verified by our admin team using your payment screenshot for complete transparency.
                 </p>
               </CardContent>
             </Card>
@@ -80,7 +80,7 @@ export default function DonatePage() {
                   <div>
                     <p className="font-semibold text-base mb-1">Quick Payment Guide</p>
                     <p className="text-sm text-foreground/90">
-                      Use the UPI ID to pay the exact amount via any UPI app, then enter your 12-digit UTR/Transaction ID from the payment confirmation to submit for verification.
+                      Use the UPI ID to pay the exact amount via any UPI app, then upload a screenshot of your successful payment confirmation to submit for verification.
                     </p>
                   </div>
                 </div>
@@ -91,8 +91,8 @@ export default function DonatePage() {
                 <ol className="text-sm text-muted-foreground space-y-1 list-decimal list-inside">
                   <li>Enter your mobile number (required) and donation amount in INR</li>
                   <li>Use the UPI ID provided to complete payment via any UPI app</li>
-                  <li>Enter your UPI Transaction ID (UTR) from the payment confirmation</li>
-                  <li>Submit the form - our admin will verify and confirm your donation</li>
+                  <li>Take a screenshot of the successful payment confirmation</li>
+                  <li>Upload the screenshot and submit - our admin will verify and confirm your donation</li>
                 </ol>
               </div>
 

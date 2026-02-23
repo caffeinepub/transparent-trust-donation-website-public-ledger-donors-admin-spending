@@ -1,28 +1,16 @@
 {
   "schemaVersion": "1.0.0",
   "projectStateVersion": 3,
-  "summary": "Project includes Internet Identity login (no signup fields) and will add an in-app post-login user details form to collect profile information.",
-  "architectural_notes": [
-    "Authentication uses Internet Identity; no signup fields during login. Additional user details collected via in-app form after login."
-  ],
-  "known_issues": [
-    "Build/update process hit a configuration error (\"Please notify the Caffeine team\")."
-  ],
-  "isFixRequest": true,
+  "summary": "New project",
+  "architectural_notes": [],
+  "known_issues": [],
+  "isFixRequest": false,
   "existing_features": [
     {
-      "id": "feature-update-the-post-login-profile-setup-modal-currently-frontend-src-components-auth-profilesetupmodal-tsx-to-collect-and-submit-the-following-user-profile-fields-name-required-age-required-email-optional-phone-number-required-gender-required-with-a-fixed-set-of-options-ensure-all-user-facing-validation-and-error-messages-are-in-english",
-      "title": "Update the post-login profile setup modal (currently `frontend/src/components/auth/ProfileSetupModal.tsx`) to collect and submit the following user profile fields: Name (required), Age (required), Email (optional), Phone number (required), Gender (required with a fixed set of options). Ensure all user-facing validation and error messages are in English.",
+      "id": "feature-add-the-google-site-verification-meta-tag-meta-name-google-site-verification-content-bdqzmiyr-iw59cw7ljqsvomefttublnf0hxcbc7095w-to-the-head-section-of-frontend-index-html-positioning-it-before-the-first-body-section",
+      "title": "Add the Google site verification meta tag '<meta name=\"google-site-verification\" content=\"BDqzMIYR_Iw59Cw7LJqSVoMEfTtuBlNF0hxcBC7095w\" />' to the <head> section of frontend/index.html, positioning it before the first <body> section",
       "reqIds": [
         "REQ-1"
-      ],
-      "version": 1
-    },
-    {
-      "id": "feature-ensure-the-donation-flow-continues-to-work-with-the-updated-user-profile-shape-frontend-src-components-donate-donationform-tsx-should-still-prefill-donor-name-email-phone-from-the-saved-profile-and-compilation-type-checking-should-succeed-after-updating-the-userprofile-type",
-      "title": "Ensure the donation flow continues to work with the updated user profile shape: `frontend/src/components/donate/DonationForm.tsx` should still prefill donor name/email/phone from the saved profile, and compilation/type-checking should succeed after updating the `UserProfile` type.",
-      "reqIds": [
-        "REQ-4"
       ],
       "version": 1
     }
@@ -30,28 +18,12 @@
   "new_feature_requests": [
     {
       "id": "AR-1",
-      "summary": "Add an in-app post-login user details form to collect name, age, optional email, phone number, gender, and other useful data",
+      "summary": "Add Google site verification meta tag to home page head section",
       "reqIds": [],
-      "status": "pending"
-    },
-    {
-      "id": "AR-3",
-      "summary": "Extend the backend `UserProfile` type and profile persistence to store the additional fields collected by the updated profile modal: age and gender, while keeping email optional. Update `getCallerUserProfile`, `getUserProfile`, and `saveCallerUserProfile` to use the updated `UserProfile` type.",
-      "reqIds": [
-        "REQ-2"
-      ],
-      "status": "pending"
-    },
-    {
-      "id": "AR-4",
-      "summary": "Add state migration logic for existing `userProfiles` entries so that canister upgrades do not break previously stored user profiles after adding new `UserProfile` fields. Populate new fields with safe defaults (e.g., unknown/empty) or `null` equivalents as appropriate for the new type.",
-      "reqIds": [
-        "REQ-3"
-      ],
       "status": "pending"
     }
   ],
-  "projectName": "Expand post-login user profile form to collect name, age, optional email, phone, and gender",
+  "projectName": "Add Google Site Verification Meta Tag",
   "clarification_mode": "instant",
   "clarification_rounds": 0
 }

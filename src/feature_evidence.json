@@ -2,10 +2,10 @@
   "kind": "feature_evidence_report",
   "features": [
     {
-      "featureId": "feature-update-the-post-login-profile-setup-modal-currently-frontend-src-components-auth-profilesetupmodal-tsx-to-collect-and-submit-the-following-user-profile-fields-name-required-age-required-email-optional-phone-number-required-gender-required-with-a-fixed-set-of-options-ensure-all-user-facing-validation-and-error-messages-are-in-english",
-      "featureTitle": "Update the post-login profile setup modal (currently `frontend/src/components/auth/ProfileSetupModal.tsx`) to collect and submit the following user profile fields: Name (required), Age (required), Email (optional), Phone number (required), Gender (required with a fixed set of options). Ensure all user-facing validation and error messages are in English.",
+      "featureId": "feature-add-the-google-site-verification-meta-tag-meta-name-google-site-verification-content-bdqzmiyr-iw59cw7ljqsvomefttublnf0hxcbc7095w-to-the-head-section-of-frontend-index-html-positioning-it-before-the-first-body-section",
+      "featureTitle": "Add the Google site verification meta tag '<meta name=\"google-site-verification\" content=\"BDqzMIYR_Iw59Cw7LJqSVoMEfTtuBlNF0hxcBC7095w\" />' to the <head> section of frontend/index.html, positioning it before the first <body> section",
       "files": [
-        "frontend/src/components/auth/ProfileSetupModal.tsx"
+        "frontend/index.html"
       ],
       "components": [
         "authorization@4.0.0",
@@ -13,29 +13,11 @@
         "shadcn-ui@1.0.0",
         "build-template-react@1.0.0",
         "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
+        "github-export-icp-cli@1.0.0",
+        "blob-storage@4.0.0"
       ],
       "testIds": [
         "REQ-1"
-      ],
-      "confidence": "high"
-    },
-    {
-      "featureId": "feature-ensure-the-donation-flow-continues-to-work-with-the-updated-user-profile-shape-frontend-src-components-donate-donationform-tsx-should-still-prefill-donor-name-email-phone-from-the-saved-profile-and-compilation-type-checking-should-succeed-after-updating-the-userprofile-type",
-      "featureTitle": "Ensure the donation flow continues to work with the updated user profile shape: `frontend/src/components/donate/DonationForm.tsx` should still prefill donor name/email/phone from the saved profile, and compilation/type-checking should succeed after updating the `UserProfile` type.",
-      "files": [
-        "frontend/src/components/donate/DonationForm.tsx"
-      ],
-      "components": [
-        "authorization@4.0.0",
-        "core-infrastructure@1.0.2",
-        "shadcn-ui@1.0.0",
-        "build-template-react@1.0.0",
-        "initial-app@1.0.0",
-        "github-export-icp-cli@1.0.0"
-      ],
-      "testIds": [
-        "REQ-4"
       ],
       "confidence": "high"
     }

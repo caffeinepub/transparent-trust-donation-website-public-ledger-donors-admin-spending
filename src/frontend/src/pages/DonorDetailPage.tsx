@@ -6,8 +6,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowLeft, Calendar, DollarSign, Mail, Phone, User } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { formatINR } from '@/utils/formatCurrency';
+import { DONOR_AVATAR_IMAGE_PATH } from '@/utils/donorAvatarImage';
 
 export default function DonorDetailPage() {
   const { id } = useParams({ from: '/donor/$id' });
@@ -97,6 +98,10 @@ export default function DonorDetailPage() {
           <CardContent className="space-y-6">
             <div className="flex flex-col items-center text-center">
               <Avatar className="h-24 w-24 mb-4">
+                <AvatarImage 
+                  src={DONOR_AVATAR_IMAGE_PATH} 
+                  alt={`${profile.displayName || 'Anonymous'} profile photo`}
+                />
                 <AvatarFallback className="bg-primary/10 text-primary text-2xl">
                   {getInitials(profile.displayName || 'Anonymous')}
                 </AvatarFallback>

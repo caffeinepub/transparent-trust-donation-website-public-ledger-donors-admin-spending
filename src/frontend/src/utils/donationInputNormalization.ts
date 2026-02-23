@@ -5,13 +5,26 @@
 
 /**
  * Normalizes an Indian phone number to the format +91XXXXXXXXXX
- * Removes spaces, hyphens, and other separators
+ * Removes spaces, hyphens, parentheses, and other separators
+ * Handles common input formats and rejects +910-prefixed numbers
  * @param phone - Phone number string (may contain spaces, hyphens, etc.)
  * @returns Normalized phone number in format +91XXXXXXXXXX
  */
 export function normalizeIndianPhone(phone: string): string {
   // Remove all whitespace and common separators
   let normalized = phone.replace(/[\s\-()]/g, '');
+  
+  // Handle leading zero after country code (e.g., +91 09876543210 or 91 09876543210)
+  // This is invalid and should be corrected to +91 9876543210
+  if (normalized.match(/^\+?910\d{10}$/)) {
+    // Remove the leading 0 after 91
+    normalized = normalized.replace(/^(\+?91)0(\d{10})$/, '$1$2');
+  }
+  
+  // If it starts with 0 followed by 10 digits, remove the leading 0 and add +91
+  if (/^0[6-9]\d{9}$/.test(normalized)) {
+    normalized = '+91' + normalized.substring(1);
+  }
   
   // If it starts with 91 without +, add the +
   if (normalized.startsWith('91') && !normalized.startsWith('+91')) {
@@ -54,6 +67,9 @@ export function isValidIndianPhone(phone: string): boolean {
   if (phone.length !== 13) return false;
   if (!phone.startsWith('+91')) return false;
   
+  // Reject +910 prefix (invalid format)
+  if (phone.startsWith('+910')) return false;
+  
   const digits = phone.substring(3);
   // First digit must be 6-9, rest must be 0-9
   if (digits[0] < '6' || digits[0] > '9') return false;
@@ -61,10 +77,11 @@ export function isValidIndianPhone(phone: string): boolean {
 }
 
 /**
- * Validates a normalized UTR
+ * Validates a normalized UTR - must be exactly 12 digits
  * @param utr - UTR string (should be normalized first)
- * @returns true if valid (12 characters), false otherwise
+ * @returns true if valid (exactly 12 digits), false otherwise
  */
 export function isValidUtr(utr: string): boolean {
-  return utr.length === 12;
+  // Must be exactly 12 characters AND all must be digits
+  return utr.length === 12 && /^\d{12}$/.test(utr);
 }

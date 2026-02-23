@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Check, X, TrendingUp, Copy } from 'lucide-react';
+import { Check, X, TrendingUp, ExternalLink } from 'lucide-react';
 import { toast } from 'sonner';
 import { formatINR } from '@/utils/formatCurrency';
 import { useState } from 'react';
@@ -12,7 +12,6 @@ export default function AdminDonationsPage() {
   const { data: donations = [], isLoading } = useGetDonations(100, 0);
   const confirmMutation = useConfirmDonation();
   const declineMutation = useDeclineDonation();
-  const [copiedUtr, setCopiedUtr] = useState<string | null>(null);
 
   const formatDate = (timestamp: bigint) => {
     const date = new Date(Number(timestamp) / 1000000);
@@ -23,17 +22,6 @@ export default function AdminDonationsPage() {
       hour: '2-digit',
       minute: '2-digit',
     });
-  };
-
-  const handleCopyUtr = async (utr: string) => {
-    try {
-      await navigator.clipboard.writeText(utr);
-      setCopiedUtr(utr);
-      toast.success('UTR copied to clipboard');
-      setTimeout(() => setCopiedUtr(null), 2000);
-    } catch (error) {
-      toast.error('Failed to copy UTR');
-    }
   };
 
   const handleConfirm = async (donationId: string) => {
@@ -73,7 +61,7 @@ export default function AdminDonationsPage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold mb-2">Donation Management</h1>
         <p className="text-muted-foreground">
-          Review and verify UPI payments before confirming donations.
+          Review payment screenshots and verify donations before confirming.
         </p>
       </div>
 
@@ -117,24 +105,26 @@ export default function AdminDonationsPage() {
                       <p className="text-sm mb-3 italic">"{donation.description}"</p>
                     )}
                     
-                    {/* UPI Transaction Details */}
-                    <div className="bg-muted/50 rounded p-3 mb-3 space-y-2">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-muted-foreground">UTR:</span>
-                        <div className="flex items-center gap-2">
-                          <code className="text-xs font-mono bg-background px-2 py-1 rounded">
-                            {donation.utr}
-                          </code>
+                    {/* Payment Screenshot */}
+                    <div className="bg-muted/50 rounded p-3 mb-3">
+                      {donation.paymentScreenshot ? (
+                        <div className="space-y-2">
+                          <span className="text-xs font-medium text-muted-foreground">Payment Screenshot:</span>
                           <Button
-                            variant="ghost"
+                            variant="outline"
                             size="sm"
-                            onClick={() => handleCopyUtr(donation.utr)}
-                            className="h-6 w-6 p-0"
+                            onClick={() => window.open(donation.paymentScreenshot!.getDirectURL(), '_blank')}
+                            className="w-full"
                           >
-                            <Copy className={`h-3 w-3 ${copiedUtr === donation.utr ? 'text-green-600' : ''}`} />
+                            <ExternalLink className="mr-2 h-4 w-4" />
+                            View Screenshot
                           </Button>
                         </div>
-                      </div>
+                      ) : (
+                        <p className="text-xs text-muted-foreground text-center py-2">
+                          No screenshot provided
+                        </p>
+                      )}
                     </div>
 
                     <div className="flex gap-2">

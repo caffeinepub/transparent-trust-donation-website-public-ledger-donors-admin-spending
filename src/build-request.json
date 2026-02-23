@@ -1,119 +1,40 @@
 {
   "kind": "build_request",
-  "title": "Expand post-login user profile form to collect name, age, optional email, phone, and gender",
+  "title": "Add Google Site Verification Meta Tag",
   "priority": "normal",
   "requirements": [
     {
       "id": "REQ-1",
-      "text": "Update the post-login profile setup modal (currently `frontend/src/components/auth/ProfileSetupModal.tsx`) to collect and submit the following user profile fields: Name (required), Age (required), Email (optional), Phone number (required), Gender (required with a fixed set of options). Ensure all user-facing validation and error messages are in English.",
+      "text": "Add the Google site verification meta tag '<meta name=\"google-site-verification\" content=\"BDqzMIYR_Iw59Cw7LJqSVoMEfTtuBlNF0hxcBC7095w\" />' to the <head> section of frontend/index.html, positioning it before the first <body> section",
       "target": "frontend",
       "source": {
         "messageIds": [
-          "msg-10",
-          "msg-14"
+          "msg-last"
         ],
         "quotes": [
-          "Add a form inside it , it should contain the question name , age , email( optional ), phone number, Gender , and other any useful data etc.",
-          "Try again"
+          "paste it into your site's home page. It should go in the <head> section, before the first <body> section :  <meta name=\"google-site-verification\" content=\"BDqzMIYR_Iw59Cw7LJqSVoMEfTtuBlNF0hxcBC7095w\" />"
         ]
       },
       "acceptanceCriteria": [
-        "When an authenticated user has no saved profile, the modal opens and shows inputs for Name, Age, Email (optional), Phone number, and Gender.",
-        "Submitting with missing/invalid required fields shows English validation errors and does not call the save mutation.",
-        "Submitting valid data calls the existing `useSaveCallerUserProfile` mutation and shows a success toast in English.",
-        "Phone number is required in the profile modal (not optional) and is validated as an Indian +91 number (consistent with existing donation validation expectations).",
-        "Gender input is required and uses a controlled selection UI (e.g., select/radio group) with explicit options."
-      ]
-    },
-    {
-      "id": "REQ-2",
-      "text": "Extend the backend `UserProfile` type and profile persistence to store the additional fields collected by the updated profile modal: age and gender, while keeping email optional. Update `getCallerUserProfile`, `getUserProfile`, and `saveCallerUserProfile` to use the updated `UserProfile` type.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-10",
-          "msg-14"
-        ],
-        "quotes": [
-          "Add a form inside it , it should contain the question name , age , email( optional ), phone number, Gender , and other any useful data etc.",
-          "Try again"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Backend `UserProfile` includes fields for `name`, `age`, `gender`, `email` (optional), and `phone` (required or optional per chosen model, but must support the frontend requirement that profile capture includes a phone value).",
-        "`saveCallerUserProfile` persists the new fields and `getCallerUserProfile` returns them.",
-        "Authorization behavior remains unchanged (only permitted users can save/see their profile; admins can view others via existing rules)."
-      ]
-    },
-    {
-      "id": "REQ-3",
-      "text": "Add state migration logic for existing `userProfiles` entries so that canister upgrades do not break previously stored user profiles after adding new `UserProfile` fields. Populate new fields with safe defaults (e.g., unknown/empty) or `null` equivalents as appropriate for the new type.",
-      "target": "backend",
-      "source": {
-        "messageIds": [
-          "msg-10",
-          "msg-14"
-        ],
-        "quotes": [
-          "Add a form inside it , it should contain the question name , age , email( optional ), phone number, Gender , and other any useful data etc.",
-          "Try again"
-        ]
-      },
-      "acceptanceCriteria": [
-        "After upgrade, principals with an existing saved profile can still load their profile without traps.",
-        "New fields introduced by this change are present in the returned profile with the chosen default values when they were not previously stored.",
-        "New profiles saved after the change persist and load all fields correctly."
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "text": "Ensure the donation flow continues to work with the updated user profile shape: `frontend/src/components/donate/DonationForm.tsx` should still prefill donor name/email/phone from the saved profile, and compilation/type-checking should succeed after updating the `UserProfile` type.",
-      "target": "frontend",
-      "source": {
-        "messageIds": [
-          "msg-10",
-          "msg-14"
-        ],
-        "quotes": [
-          "Add a form inside it , it should contain the question name , age , email( optional ), phone number, Gender , and other any useful data etc.",
-          "Try again"
-        ]
-      },
-      "acceptanceCriteria": [
-        "Donation form still prefills `displayName`, `email`, and `phone` from the saved user profile when authenticated.",
-        "No runtime errors occur due to missing/renamed profile fields.",
-        "TypeScript build passes with the updated `UserProfile` type used in React Query hooks (`useGetCallerUserProfile`, `useSaveCallerUserProfile`)."
+        "The Google site verification meta tag is present in frontend/index.html",
+        "The meta tag is placed within the <head> section",
+        "The meta tag appears before the opening <body> tag",
+        "The verification content value matches exactly: BDqzMIYR_Iw59Cw7LJqSVoMEfTtuBlNF0hxcBC7095w"
       ]
     }
   ],
   "constraints": [
-    "Do not edit any files under `frontend/src/components/ui` (compose existing UI components instead).",
-    "Do not modify immutable hook files (`frontend/src/hooks/useInternetIdentity.ts`, `frontend/src/hooks/useActor.ts`, `frontend/src/main.tsx`).",
-    "Backend must remain a single Motoko actor in `backend/main.mo`; only add/modify `backend/migration.mo` if required for state upgrades."
+    "Do not modify any existing meta tags or head content",
+    "Preserve all existing SEO meta tags and Open Graph tags",
+    "Maintain the exact verification content string provided by the user"
   ],
   "nonGoals": [
-    "Do not add third-party authentication (Internet Identity remains the only auth method).",
-    "Do not add external databases or non-IC backend services.",
-    "Do not change the donation record schema to include age/gender unless explicitly requested later."
+    "Modifying any other HTML files beyond index.html",
+    "Adding additional Google verification methods",
+    "Changing existing Search Console configuration"
   ],
   "imageRequirements": {
     "required": [],
     "edits": []
-  },
-  "userProfileUpdate": {
-    "goalsToAdd": [
-      "Collect additional user details after Internet Identity login: name, age, optional email, phone number, and gender."
-    ],
-    "goalsToRemove": [],
-    "preferencesToAdd": [
-      "Use English for all user-facing UI text and validation messages."
-    ],
-    "preferencesToRemove": [],
-    "miscToAdd": [
-      "Known issue: previous build attempt failed with a configuration error; proceed with implementing the requested profile form changes."
-    ],
-    "miscToRemove": [],
-    "fieldsToSet": {},
-    "fieldsToDelete": []
   }
 }

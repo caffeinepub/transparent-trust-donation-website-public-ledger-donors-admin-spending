@@ -1,54 +1,22 @@
 {
   "kind": "implementation_plan",
   "version": "1.0",
-  "title": "Expand authenticated user profile capture (name, age, optional email, phone, gender) and keep donation prefill working",
+  "title": "Add Google Site Verification Meta Tag",
   "requirements": [
     {
       "id": "REQ-1",
-      "summary": "Expand ProfileSetupModal to collect required name/age/phone/gender (and optional email), validate in English, and submit via existing save profile mutation.",
+      "summary": "Add Google site verification meta tag to frontend/index.html head section",
       "acceptanceCriteria": [
-        "When an authenticated user has no saved profile, the modal opens and shows inputs for Name, Age, Email (optional), Phone number, and Gender.",
-        "Submitting with missing/invalid required fields shows English validation errors and does not call the save mutation.",
-        "Submitting valid data calls the existing `useSaveCallerUserProfile` mutation and shows a success toast in English.",
-        "Phone number is required in the profile modal (not optional) and is validated as an Indian +91 number (consistent with existing donation validation expectations).",
-        "Gender input is required and uses a controlled selection UI (e.g., select/radio group) with explicit options."
+        "The Google site verification meta tag is present in frontend/index.html",
+        "The meta tag is placed within the <head> section",
+        "The meta tag appears before the opening <body> tag",
+        "The verification content value matches exactly: BDqzMIYR_Iw59Cw7LJqSVoMEfTtuBlNF0hxcBC7095w"
       ],
       "file_operations": [
         {
-          "path": "frontend/src/components/auth/ProfileSetupModal.tsx",
+          "path": "frontend/index.html",
           "operation": "modify",
-          "description": "Update the post-login profile setup modal form to include required Name, Age, Phone (+91 India format), and Gender (controlled selection with explicit options), plus optional Email; enforce English inline/toast validation messages; on success call existing `useSaveCallerUserProfile` and show an English success toast. Use the selected \"authorization\" component’s frontend guidance for profile setup modal behavior (show only when `getCallerUserProfile()` returns null and avoid modal flash). Verify the component's usage instructions before implementing."
-        },
-        {
-          "path": "frontend/src/utils/donationInputNormalization.ts",
-          "operation": "modify",
-          "description": "Ensure there is a single shared +91 Indian phone normalization/validation utility suitable for both DonationForm and ProfileSetupModal, so profile phone validation matches donation expectations; reuse these utilities in the modal instead of duplicating logic."
-        },
-        {
-          "path": "frontend/src/backend.d.ts",
-          "operation": "modify",
-          "description": "Update the frontend-declared `UserProfile` type (and any related enums/types if needed) to match the updated profile shape consumed by the UI (including age and gender, and phone availability per the backend change) so TypeScript type-checking remains consistent across hooks and components."
-        }
-      ]
-    },
-    {
-      "id": "REQ-4",
-      "summary": "Keep donation flow compatible with the updated UserProfile shape and continue prefilling donor details from the saved profile.",
-      "acceptanceCriteria": [
-        "Donation form still prefills `displayName`, `email`, and `phone` from the saved user profile when authenticated.",
-        "No runtime errors occur due to missing/renamed profile fields.",
-        "TypeScript build passes with the updated `UserProfile` type used in React Query hooks (`useGetCallerUserProfile`, `useSaveCallerUserProfile`)."
-      ],
-      "file_operations": [
-        {
-          "path": "frontend/src/components/donate/DonationForm.tsx",
-          "operation": "modify",
-          "description": "Adjust donation form profile-prefill and phone selection logic to remain safe with the updated `UserProfile` type (including age/gender additions and any phone optionality changes), preserving existing behavior: prefill name/email/phone when available, and gracefully fall back when absent; ensure no runtime errors and TypeScript passes."
-        },
-        {
-          "path": "frontend/src/hooks/useQueries.ts",
-          "operation": "modify",
-          "description": "Update any affected `UserProfile`-typed hook signatures/usages (if required after `frontend/src/backend.d.ts` changes) so React Query hooks compile and the donation/profile flows continue to type-check cleanly."
+          "description": "Add the Google site verification meta tag '<meta name=\"google-site-verification\" content=\"BDqzMIYR_Iw59Cw7LJqSVoMEfTtuBlNF0hxcBC7095w\" />' within the <head> section, positioned before the opening <body> tag. Insert it after the existing meta tags but before any <script> tags or the closing </head> tag. Preserve all existing SEO meta tags, Open Graph tags, and other head content without modification."
         }
       ]
     }

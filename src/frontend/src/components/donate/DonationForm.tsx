@@ -1,206 +1,252 @@
-import { useState, useEffect } from 'react';
-import { useInternetIdentity } from '@/hooks/useInternetIdentity';
-import { useGetCallerUserProfile, useAddDonation } from '@/hooks/useQueries';
+import { useState, useEffect, useRef } from 'react';
+import { useSubmitDonation } from '@/hooks/useQueries';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Loader2, CheckCircle2, Heart, AlertCircle } from 'lucide-react';
+import { CheckCircle2, Receipt, AlertCircle, Upload, X } from 'lucide-react';
 import { toast } from 'sonner';
+import { useNavigate } from '@tanstack/react-router';
+import { normalizeIndianPhone, sanitizeAmount, isValidIndianPhone } from '@/utils/donationInputNormalization';
+import { generatePaymentReference } from '@/utils/paymentReference';
+import { extractCanisterError } from '@/utils/canisterError';
+import { fileToUint8Array } from '@/utils/fileToUint8Array';
+import { ExternalBlob } from '@/backend';
 import UpiPaymentSection from './UpiPaymentSection';
-import { 
-  normalizeIndianPhone, 
-  normalizeUtr, 
-  sanitizeAmount,
-  isValidIndianPhone,
-  isValidUtr
-} from '@/utils/donationInputNormalization';
 
 export default function DonationForm() {
-  const { identity } = useInternetIdentity();
-  const { data: userProfile } = useGetCallerUserProfile();
-  const addDonation = useAddDonation();
+  const navigate = useNavigate();
+  const submitDonationMutation = useSubmitDonation();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const [amount, setAmount] = useState('');
-  const [description, setDescription] = useState('');
+  // Form state
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('+91');
-  const [utr, setUtr] = useState('');
-  const [submissionSuccess, setSubmissionSuccess] = useState(false);
+  const [phone, setPhone] = useState('');
+  const [amount, setAmount] = useState('');
+  const [description, setDescription] = useState('');
+  const [paymentScreenshot, setPaymentScreenshot] = useState<File | null>(null);
+  const [screenshotPreview, setScreenshotPreview] = useState<string | null>(null);
 
-  const isAuthenticated = !!identity;
+  // Payment reference - stable per amount entry
+  const [paymentReference, setPaymentReference] = useState<string>('');
 
-  // Pre-fill form with user profile data if authenticated
+  // Generate payment reference when amount is entered
   useEffect(() => {
-    if (isAuthenticated && userProfile) {
-      setDisplayName(userProfile.name || '');
-      setEmail(userProfile.email || '');
-      // Only prefill phone if it exists in profile
-      if (userProfile.phone) {
-        setPhone(userProfile.phone);
+    if (amount && parseFloat(amount) >= 10) {
+      // Only generate once per amount entry
+      if (!paymentReference) {
+        setPaymentReference(generatePaymentReference());
+      }
+    } else {
+      setPaymentReference('');
+    }
+  }, [amount, paymentReference]);
+
+  // Validation state
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+
+    if (!displayName.trim()) {
+      newErrors.displayName = 'Name is required';
+    }
+
+    if (!phone.trim()) {
+      newErrors.phone = 'Phone number is required';
+    } else {
+      const normalized = normalizeIndianPhone(phone);
+      if (!isValidIndianPhone(normalized)) {
+        newErrors.phone = 'Please enter a valid 10-digit Indian mobile number (format: +91XXXXXXXXXX, not +910XXXXXXXXX)';
       }
     }
-  }, [isAuthenticated, userProfile]);
 
-  // Sanitize and parse amount
-  const sanitizedAmount = sanitizeAmount(amount);
-  const amountValue = parseFloat(sanitizedAmount);
-  const isValidAmount = !isNaN(amountValue) && amountValue >= 10;
-  const amountInPaise = isValidAmount ? BigInt(Math.round(amountValue * 100)) : BigInt(0);
+    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      newErrors.email = 'Please enter a valid email address';
+    }
 
-  // Normalize and validate phone
-  const phoneToUse = isAuthenticated && userProfile?.phone ? userProfile.phone : phone;
-  const normalizedPhone = normalizeIndianPhone(phoneToUse);
-  const isPhoneValid = isValidIndianPhone(normalizedPhone);
+    const sanitized = sanitizeAmount(amount);
+    const amountNum = parseFloat(sanitized);
+    if (!amount || isNaN(amountNum) || amountNum < 10) {
+      newErrors.amount = 'Minimum donation amount is ₹10';
+    }
 
-  // Normalize and validate UTR
-  const normalizedUtr = normalizeUtr(utr);
-  const isUtrValid = isValidUtr(normalizedUtr);
+    if (!paymentScreenshot) {
+      newErrors.screenshot = 'Payment screenshot is required';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleScreenshotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      // Validate file type
+      if (!file.type.startsWith('image/')) {
+        toast.error('Please select an image file');
+        return;
+      }
+
+      // Validate file size (max 5MB)
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error('Image size must be less than 5MB');
+        return;
+      }
+
+      setPaymentScreenshot(file);
+      
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setScreenshotPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveScreenshot = () => {
+    setPaymentScreenshot(null);
+    setScreenshotPreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    // Clear previous success state when starting new submission
-    setSubmissionSuccess(false);
-
-    if (!isValidAmount) {
-      toast.error('Please enter a valid donation amount (minimum ₹10)');
+    // Validate form before submission
+    if (!validateForm()) {
+      toast.error('Please fix the errors in the form');
       return;
     }
-
-    // Validate phone number using normalized value
-    if (!isPhoneValid) {
-      toast.error('Please enter a valid 10-digit Indian mobile number with +91 country code');
-      return;
-    }
-
-    if (!isAuthenticated && !displayName.trim()) {
-      toast.error('Please enter your name');
-      return;
-    }
-
-    if (!isUtrValid) {
-      toast.error('Please enter a valid 12-digit UPI Transaction ID (UTR)');
-      return;
-    }
-
-    // Generate donor ID
-    const donorId = isAuthenticated && identity
-      ? identity.getPrincipal().toString()
-      : `anon-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
     try {
-      await addDonation.mutateAsync({
+      const normalizedPhone = normalizeIndianPhone(phone);
+      const sanitizedAmount = sanitizeAmount(amount);
+      const amountInPaise = BigInt(Math.round(parseFloat(sanitizedAmount) * 100));
+
+      const donorId = `${normalizedPhone}-${Date.now()}`;
+
+      // Convert screenshot to ExternalBlob
+      let screenshotBlob: ExternalBlob | null = null;
+      if (paymentScreenshot) {
+        try {
+          const bytes = await fileToUint8Array(paymentScreenshot);
+          screenshotBlob = ExternalBlob.fromBytes(bytes as Uint8Array<ArrayBuffer>);
+        } catch (error) {
+          console.error('Screenshot conversion error:', error);
+          toast.error('Failed to process payment screenshot. Please try again.');
+          return;
+        }
+      }
+
+      await submitDonationMutation.mutateAsync({
         donorId,
+        displayName: displayName.trim(),
+        email: email.trim() || undefined,
+        phone: normalizedPhone,
         amount: amountInPaise,
         description: description.trim(),
-        displayName: isAuthenticated && userProfile ? userProfile.name : displayName.trim(),
-        email: email.trim() || undefined,
-        phone: normalizedPhone, // Use normalized phone
-        utr: normalizedUtr, // Use normalized UTR
+        paymentScreenshot: screenshotBlob,
       });
 
-      toast.success('Donation submitted successfully! Our admin team will verify your payment and confirm shortly.');
+      toast.success('Donation submitted successfully! Pending admin verification.');
       
-      // Set success state to show thank you message
-      setSubmissionSuccess(true);
-
       // Reset form
+      setDisplayName('');
+      setEmail('');
+      setPhone('');
       setAmount('');
       setDescription('');
-      setUtr('');
-      if (!isAuthenticated) {
-        setDisplayName('');
-        setEmail('');
-        setPhone('+91');
+      setPaymentScreenshot(null);
+      setScreenshotPreview(null);
+      setPaymentReference('');
+      setErrors({});
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
       }
-    } catch (error: any) {
-      console.error('Donation error:', error);
-      // Display backend error message directly to user
-      const errorMessage = error?.message || 'Failed to submit donation. Please check your details and try again.';
+
+      // Navigate to ledger
+      setTimeout(() => {
+        navigate({ to: '/ledger' });
+      }, 1500);
+    } catch (error: unknown) {
+      console.error('Donation submission error:', error);
+      const errorMessage = extractCanisterError(error);
       toast.error(errorMessage);
     }
   };
 
-  // Show thank you message after successful submission
-  if (submissionSuccess) {
-    return (
-      <Card className="border-primary/30 bg-gradient-to-br from-primary/10 to-accent/10">
-        <CardHeader>
-          <div className="flex items-center gap-3 mb-2">
-            <div className="flex items-center justify-center w-12 h-12 rounded-full bg-primary/20">
-              <Heart className="h-6 w-6 text-primary fill-primary" />
-            </div>
-            <CardTitle className="text-2xl">Thank You for Your Donation!</CardTitle>
-          </div>
-          <CardDescription className="text-base">
-            Your generosity makes a real difference
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="space-y-3 text-sm">
-            <p className="text-foreground">
-              We have received your donation submission and truly appreciate your support. Your contribution will help us continue our mission to serve those in need.
-            </p>
-            <div className="p-4 bg-background/50 rounded-lg border border-primary/20">
-              <p className="font-semibold mb-2 flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-primary" />
-                What happens next?
-              </p>
-              <ul className="space-y-1 text-muted-foreground list-disc list-inside ml-1">
-                <li>Our admin team will verify your payment using the UTR you provided</li>
-                <li>Once verified, your donation will be confirmed and added to our public ledger</li>
-                <li>You can track your contribution and see how funds are being used transparently</li>
-              </ul>
-            </div>
-            <p className="text-muted-foreground">
-              Thank you for trusting us with your donation. Together, we can make a positive impact in our community.
-            </p>
-          </div>
-          <Button 
-            onClick={() => setSubmissionSuccess(false)} 
-            className="w-full"
-            size="lg"
-          >
-            Make Another Donation
-          </Button>
-        </CardContent>
-      </Card>
-    );
-  }
+  const amountInPaise = amount && parseFloat(amount) >= 10 
+    ? BigInt(Math.round(parseFloat(amount) * 100))
+    : BigInt(0);
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Step 0: Donor Information */}
-      <Card>
+    <div className="space-y-6">
+      {/* Step 1: UPI Payment Section */}
+      {amountInPaise > 0 && (
+        <UpiPaymentSection 
+          amountInPaise={amountInPaise} 
+          paymentReference={paymentReference}
+        />
+      )}
+
+      {/* Step 2: Donation Details Form */}
+      <Card className="border-primary/20">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm font-bold">
-              0
-            </span>
-            Your Information
+            <Receipt className="h-5 w-5 text-primary" />
+            Step 2: Enter Donation Details
           </CardTitle>
           <CardDescription>
-            {isAuthenticated 
-              ? 'Your profile information will be used for this donation'
-              : 'Please provide your details to proceed'
-            }
+            Fill in your details and upload a screenshot of your successful UPI payment to complete your donation submission.
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
-          {!isAuthenticated && (
-            <>
+        <CardContent>
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {/* Personal Information */}
+            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="displayName">Your Name *</Label>
+                <Label htmlFor="displayName">
+                  Full Name <span className="text-destructive">*</span>
+                </Label>
                 <Input
                   id="displayName"
                   value={displayName}
                   onChange={(e) => setDisplayName(e.target.value)}
-                  placeholder="Enter your full name"
+                  placeholder="Your full name"
                   required
                 />
+                {errors.displayName && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.displayName}
+                  </p>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="phone">
+                  Phone Number <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="phone"
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  placeholder="+91 9876543210"
+                  required
+                />
+                {errors.phone && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.phone}
+                  </p>
+                )}
               </div>
 
               <div className="space-y-2">
@@ -212,143 +258,133 @@ export default function DonationForm() {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="your@email.com"
                 />
+                {errors.email && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.email}
+                  </p>
+                )}
               </div>
-            </>
-          )}
+            </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Mobile Number (required) *</Label>
-            <Input
-              id="phone"
-              type="tel"
-              value={phoneToUse}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+91 9876543210"
-              required
-              disabled={isAuthenticated && !!userProfile?.phone}
-              className={isPhoneValid ? 'border-green-500' : ''}
-            />
-            <p className="text-xs text-muted-foreground">
-              {isAuthenticated && userProfile?.phone 
-                ? 'Using phone number from your profile'
-                : 'Enter your 10-digit mobile number with +91 (spaces/hyphens OK)'
-              }
-            </p>
-            {phoneToUse && phoneToUse !== '+91' && !isPhoneValid && (
-              <p className="text-xs text-destructive flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                Invalid phone format. Use +91 followed by 10 digits (6-9 first)
-              </p>
-            )}
-          </div>
+            {/* Donation Details */}
+            <div className="space-y-4 pt-4 border-t">
+              <div className="space-y-2">
+                <Label htmlFor="amount">
+                  Donation Amount (₹) <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="amount"
+                  type="number"
+                  min="10"
+                  step="1"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="Enter amount in rupees (minimum ₹10)"
+                  required
+                />
+                {errors.amount && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.amount}
+                  </p>
+                )}
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="amount">Donation Amount (INR) *</Label>
-            <Input
-              id="amount"
-              type="text"
-              inputMode="decimal"
-              value={amount}
-              onChange={(e) => setAmount(e.target.value)}
-              placeholder="Enter amount in rupees (minimum ₹10)"
-              required
-            />
-            {isValidAmount && (
-              <p className="text-xs text-green-600 flex items-center gap-1">
-                <CheckCircle2 className="h-3 w-3" />
-                Amount: ₹{amountValue.toFixed(2)}
-              </p>
-            )}
-            {amount && !isValidAmount && (
-              <p className="text-xs text-destructive flex items-center gap-1">
-                <AlertCircle className="h-3 w-3" />
-                Minimum amount is ₹10
-              </p>
-            )}
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="description">Message (optional)</Label>
+                <Textarea
+                  id="description"
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  placeholder="Add a message with your donation..."
+                  rows={3}
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="description">Message (optional)</Label>
-            <Textarea
-              id="description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="Add a message with your donation"
-              rows={3}
-            />
-          </div>
+              <div className="space-y-2">
+                <Label htmlFor="screenshot">
+                  Payment Screenshot <span className="text-destructive">*</span>
+                </Label>
+                <div className="space-y-3">
+                  {!paymentScreenshot ? (
+                    <div className="border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
+                      <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm text-muted-foreground mb-2">
+                        Upload a screenshot of your successful payment
+                      </p>
+                      <Input
+                        ref={fileInputRef}
+                        id="screenshot"
+                        type="file"
+                        accept="image/*"
+                        onChange={handleScreenshotChange}
+                        className="cursor-pointer"
+                        required
+                      />
+                    </div>
+                  ) : (
+                    <div className="border border-border rounded-lg p-4">
+                      <div className="flex items-start gap-3">
+                        {screenshotPreview && (
+                          <img 
+                            src={screenshotPreview} 
+                            alt="Payment screenshot preview" 
+                            className="w-24 h-24 object-cover rounded border"
+                          />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{paymentScreenshot.name}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {(paymentScreenshot.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={handleRemoveScreenshot}
+                          className="flex-shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground">
+                  Take a screenshot of the successful payment confirmation from your UPI app
+                </p>
+                {errors.screenshot && (
+                  <p className="text-xs text-destructive flex items-center gap-1">
+                    <AlertCircle className="h-3 w-3" />
+                    {errors.screenshot}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <Button 
+              type="submit" 
+              className="w-full" 
+              size="lg"
+              disabled={submitDonationMutation.isPending}
+            >
+              {submitDonationMutation.isPending ? (
+                <>
+                  <CheckCircle2 className="mr-2 h-5 w-5 animate-spin" />
+                  Submitting...
+                </>
+              ) : (
+                <>
+                  <CheckCircle2 className="mr-2 h-5 w-5" />
+                  Submit Donation
+                </>
+              )}
+            </Button>
+          </form>
         </CardContent>
       </Card>
-
-      {/* Step 1: UPI Payment */}
-      {isValidAmount && (
-        <UpiPaymentSection amountInPaise={amountInPaise} />
-      )}
-
-      {/* Step 2: Payment Confirmation */}
-      {isValidAmount && (
-        <Card className="border-primary/20 bg-primary/5">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <span className="flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-sm font-bold">
-                2
-              </span>
-              Enter Payment Details
-            </CardTitle>
-            <CardDescription>
-              After completing the UPI payment, enter your transaction ID below
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="utr">UPI Transaction ID / UTR (12 digits) *</Label>
-              <Input
-                id="utr"
-                value={utr}
-                onChange={(e) => setUtr(e.target.value)}
-                placeholder="Enter 12-digit UTR (spaces OK)"
-                required
-                className={isUtrValid ? 'border-green-500' : ''}
-              />
-              <p className="text-xs text-muted-foreground">
-                Find this in your UPI app's payment confirmation screen (12-digit number)
-              </p>
-              {utr && !isUtrValid && (
-                <p className="text-xs text-destructive flex items-center gap-1">
-                  <AlertCircle className="h-3 w-3" />
-                  UTR must be exactly 12 characters
-                </p>
-              )}
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
-      <Button 
-        type="submit" 
-        className="w-full"
-        disabled={addDonation.isPending || !isValidAmount || !isUtrValid || !isPhoneValid}
-        size="lg"
-      >
-        {addDonation.isPending ? (
-          <>
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            Submitting...
-          </>
-        ) : (
-          'Submit Donation for Verification'
-        )}
-      </Button>
-
-      <div className="bg-muted/50 rounded-lg p-4 text-sm text-muted-foreground">
-        <p className="font-medium mb-2">Important Notes:</p>
-        <ul className="space-y-1 list-disc list-inside text-xs">
-          <li>Complete the UPI payment first before submitting this form</li>
-          <li>Your donation will be verified by our admin team using the UTR you provide</li>
-          <li>Once verified, your donation will be confirmed and added to the public ledger</li>
-          <li>Mobile number is mandatory for all donations for verification purposes</li>
-        </ul>
-      </div>
-    </form>
+    </div>
   );
 }

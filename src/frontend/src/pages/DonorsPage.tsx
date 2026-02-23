@@ -8,10 +8,10 @@ export default function DonorsPage() {
   const { isAdmin, isLoading: adminLoading } = useAdminStatus();
   
   // Fetch admin profiles only if user is admin
-  const { data: adminDonors = [], isLoading: adminDonorsLoading } = useGetDonorProfiles(isAdmin);
+  const { data: adminDonors = [], isLoading: adminDonorsLoading } = useGetDonorProfiles();
   
   // Fetch public profiles only if user is not admin
-  const { data: publicDonors = [], isLoading: publicDonorsLoading } = useGetDonorPublicProfiles(!isAdmin);
+  const { data: publicDonors = [], isLoading: publicDonorsLoading } = useGetDonorPublicProfiles();
   
   // Use the appropriate data based on admin status
   const donors = isAdmin ? adminDonors : publicDonors;

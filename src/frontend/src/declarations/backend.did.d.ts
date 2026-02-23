@@ -10,14 +10,29 @@ import type { ActorMethod } from '@icp-sdk/core/agent';
 import type { IDL } from '@icp-sdk/core/candid';
 import type { Principal } from '@icp-sdk/core/principal';
 
-export interface DonationInput {
-  'utr' : string,
-  'displayName' : string,
-  'donorId' : string,
+export interface ActivityEntry {
+  'id' : string,
+  'title' : string,
   'description' : string,
-  'email' : [] | [string],
+  'author' : string,
+  'notes' : [] | [string],
+  'timestamp' : Time,
+  'images' : Array<ExternalBlob>,
+}
+export interface ContactFormEntry {
+  'id' : string,
+  'inquiryType' : InquiryType,
+  'name' : string,
+  'submittedBy' : [] | [Principal],
+  'email' : string,
+  'replyStatus' : { 'closed' : null } |
+    { 'notReplied' : null } |
+    { 'pendingResponse' : null } |
+    { 'replied' : null },
+  'message' : string,
+  'timestamp' : Time,
   'phone' : string,
-  'amount' : bigint,
+  'adminNotes' : [] | [string],
 }
 export interface DonorProfile {
   'id' : string,
@@ -25,6 +40,7 @@ export interface DonorProfile {
   'principal' : [] | [Principal],
   'displayName' : string,
   'joinedTimestamp' : Time,
+  'privacyLevel' : PrivacyLevel,
   'email' : [] | [string],
   'gender' : Gender,
   'phone' : string,
@@ -41,24 +57,24 @@ export interface DonorPublicProfile {
   'gender' : Gender,
   'totalDonated' : bigint,
 }
+export type ExternalBlob = Uint8Array;
 export type Gender = { 'other' : null } |
   { 'female' : null } |
   { 'male' : null } |
   { 'preferNotToSay' : null };
+export type InquiryType = { 'donationQuestion' : null } |
+  { 'other' : null } |
+  { 'collaborationProposal' : null } |
+  { 'feedbackSuggestion' : null } |
+  { 'general' : null } |
+  { 'serviceOffer' : null };
 export interface Metrics {
   'totalSiteViews' : bigint,
   'currentLiveViewers' : bigint,
 }
-export interface Notification {
-  'id' : bigint,
-  'message' : string,
-  'timestamp' : Time,
-  'priority' : NotificationPriority,
-  'isNew' : boolean,
-}
-export type NotificationPriority = { 'low' : null } |
-  { 'normal' : null } |
-  { 'high' : null };
+export type PrivacyLevel = { 'publicView' : null } |
+  { 'strictlyConfidential' : null } |
+  { 'anonymous' : null };
 export interface Record {
   'id' : string,
   'description' : string,
@@ -67,12 +83,15 @@ export interface Record {
 }
 export interface Record__1 {
   'id' : string,
-  'utr' : string,
   'status' : Status,
+  'paymentScreenshot' : [] | [ExternalBlob],
   'donorId' : string,
   'description' : string,
+  'proverbId' : [] | [bigint],
+  'donorGender' : Gender,
   'timestamp' : Time,
   'amount' : bigint,
+  'proverbFeedback' : [] | [boolean],
 }
 export type Status = { 'pending' : null } |
   { 'confirmed' : null } |
@@ -88,41 +107,111 @@ export interface UserProfile {
 export type UserRole = { 'admin' : null } |
   { 'user' : null } |
   { 'guest' : null };
+export interface _CaffeineStorageCreateCertificateResult {
+  'method' : string,
+  'blob_hash' : string,
+}
+export interface _CaffeineStorageRefillInformation {
+  'proposed_top_up_amount' : [] | [bigint],
+}
+export interface _CaffeineStorageRefillResult {
+  'success' : [] | [boolean],
+  'topped_up_amount' : [] | [bigint],
+}
 export interface _SERVICE {
+  '_caffeineStorageBlobIsLive' : ActorMethod<[Uint8Array], boolean>,
+  '_caffeineStorageBlobsToDelete' : ActorMethod<[], Array<Uint8Array>>,
+  '_caffeineStorageConfirmBlobDeletion' : ActorMethod<
+    [Array<Uint8Array>],
+    undefined
+  >,
+  '_caffeineStorageCreateCertificate' : ActorMethod<
+    [string],
+    _CaffeineStorageCreateCertificateResult
+  >,
+  '_caffeineStorageRefillCashier' : ActorMethod<
+    [[] | [_CaffeineStorageRefillInformation]],
+    _CaffeineStorageRefillResult
+  >,
+  '_caffeineStorageUpdateGatewayPrincipals' : ActorMethod<[], undefined>,
   '_initializeAccessControlWithSecret' : ActorMethod<[string], undefined>,
-  'acknowledgeNotification' : ActorMethod<[bigint], undefined>,
-  'addDonation' : ActorMethod<[DonationInput], string>,
+  'addServiceActivity' : ActorMethod<
+    [string, string, Array<ExternalBlob>, string, [] | [string]],
+    string
+  >,
   'addSpendingRecord' : ActorMethod<[bigint, string], string>,
   'assignCallerUserRole' : ActorMethod<[Principal, UserRole], undefined>,
   'confirmAllPendingDonations' : ActorMethod<[], undefined>,
   'confirmDonation' : ActorMethod<[string], undefined>,
   'declineDonation' : ActorMethod<[string], undefined>,
+  'deleteServiceActivity' : ActorMethod<[string], undefined>,
   'deleteSpendingRecord' : ActorMethod<[string], undefined>,
-  'getAdminNotifications' : ActorMethod<[[] | [bigint]], Array<Notification>>,
+  'getAllProverbs' : ActorMethod<
+    [],
+    Array<{ 'id' : string, 'text' : string, 'author' : string }>
+  >,
+  'getAllServiceActivities' : ActorMethod<
+    [bigint, bigint],
+    Array<ActivityEntry>
+  >,
   'getCallerUserProfile' : ActorMethod<[], [] | [UserProfile]>,
   'getCallerUserRole' : ActorMethod<[], UserRole>,
+  'getContactFormEntries' : ActorMethod<[], Array<ContactFormEntry>>,
   'getDonations' : ActorMethod<[bigint, bigint], Array<Record__1>>,
   'getDonorDonations' : ActorMethod<[string], Array<Record__1>>,
   'getDonorProfile' : ActorMethod<[string], [] | [DonorProfile]>,
   'getDonorProfiles' : ActorMethod<[], Array<DonorProfile>>,
   'getDonorPublicProfile' : ActorMethod<[string], [] | [DonorPublicProfile]>,
   'getDonorPublicProfiles' : ActorMethod<[], Array<DonorPublicProfile>>,
+  'getProverbsForDonation' : ActorMethod<
+    [string],
+    Array<{ 'id' : string, 'text' : string, 'author' : string }>
+  >,
+  'getServiceActivitiesByRecentDays' : ActorMethod<
+    [bigint],
+    Array<ActivityEntry>
+  >,
+  'getServiceActivity' : ActorMethod<[string], [] | [ActivityEntry]>,
   'getSiteMetrics' : ActorMethod<[], Metrics>,
   'getSpendingRecords' : ActorMethod<[bigint, bigint], Array<Record>>,
   'getTotalDonations' : ActorMethod<[], bigint>,
   'getTotalSpending' : ActorMethod<[], bigint>,
   'getTrustBalance' : ActorMethod<[], bigint>,
-  'getUnreadNotificationCount' : ActorMethod<[], bigint>,
   'getUserProfile' : ActorMethod<[Principal], [] | [UserProfile]>,
   'heartbeatLiveViewer' : ActorMethod<[string], undefined>,
   'incrementSiteViews' : ActorMethod<[], undefined>,
   'isCallerAdmin' : ActorMethod<[], boolean>,
-  'markNotificationAsRead' : ActorMethod<[bigint], undefined>,
+  'recordProverbFeedback' : ActorMethod<[string, boolean], undefined>,
   'registerLiveViewer' : ActorMethod<[string], undefined>,
   'saveCallerUserProfile' : ActorMethod<[UserProfile], undefined>,
+  'searchServiceActivitiesByTitle' : ActorMethod<
+    [string],
+    Array<ActivityEntry>
+  >,
+  'selectProverbForDonation' : ActorMethod<[string, bigint], undefined>,
+  'submitContactForm' : ActorMethod<
+    [string, string, string, string, InquiryType],
+    string
+  >,
+  'submitDonation' : ActorMethod<
+    [
+      string,
+      bigint,
+      string,
+      string,
+      [] | [string],
+      string,
+      [] | [ExternalBlob],
+    ],
+    string
+  >,
   'unregisterLiveViewer' : ActorMethod<[string], undefined>,
   'updateDonorProfileAdmin' : ActorMethod<
     [string, string, [] | [string], string],
+    undefined
+  >,
+  'updateServiceActivity' : ActorMethod<
+    [string, string, string, Array<ExternalBlob>, string, [] | [string]],
     undefined
   >,
   'updateSpendingRecord' : ActorMethod<[string, bigint, string], undefined>,

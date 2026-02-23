@@ -12,8 +12,8 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from '@tanstack/react-router';
 import SpendingBreakdownCard from '@/components/ledger/SpendingBreakdownCard';
 import RecentTransactionsList from '@/components/ledger/RecentTransactionsList';
-import { APPROVED_IMAGE_PATH } from '@/utils/approvedImage';
 import { formatINR } from '@/utils/formatCurrency';
+import { APPROVED_IMAGE_PATH } from '@/utils/approvedImage';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
@@ -26,18 +26,18 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary/5 via-background to-accent/5 border-b border-border/40">
+      <section className="relative bg-gradient-to-br from-primary/10 via-background to-accent/10 border-b border-border/40">
         <div className="container py-16 md:py-24">
-          <div className="grid md:grid-cols-2 gap-12 items-center">
-            <div>
-              <h1 className="text-4xl md:text-5xl font-bold mb-4 leading-tight">
-                Building Hope Through Transparent Giving
+          <div className="grid md:grid-cols-2 gap-8 items-center">
+            {/* Hero Text */}
+            <div className="space-y-6 order-2 md:order-1">
+              <h1 className="text-4xl md:text-5xl font-bold leading-tight">
+                Small contributions create big transformations
               </h1>
-              <p className="text-lg text-muted-foreground mb-8">
-                Every donation is tracked, every expense is visible. Join us in making a real difference 
-                for those who need it most.
+              <p className="text-xl text-muted-foreground">
+                Why Not Us? Together, we can make change visible, transparent, and meaningful.
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 pt-4">
                 <Button 
                   size="lg" 
                   onClick={() => navigate({ to: '/donate' })}
@@ -55,12 +55,16 @@ export default function DashboardPage() {
                 </Button>
               </div>
             </div>
-            <div className="relative">
-              <img 
-                src={APPROVED_IMAGE_PATH}
-                alt="Why Not Us - Making a Difference" 
-                className="rounded-2xl shadow-2xl w-full h-auto object-cover"
-              />
+
+            {/* Hero Image */}
+            <div className="order-1 md:order-2">
+              <div className="relative rounded-2xl overflow-hidden shadow-2xl border-4 border-primary/20">
+                <img 
+                  src={APPROVED_IMAGE_PATH} 
+                  alt="Why Not Us - Community support and transparent donations"
+                  className="w-full h-auto object-cover"
+                />
+              </div>
             </div>
           </div>
         </div>
@@ -69,16 +73,16 @@ export default function DashboardPage() {
       {/* Stats Section */}
       <section className="container py-12">
         <div className="grid gap-6 md:grid-cols-3">
-          <Card>
+          <Card className="border-primary/20 hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Trust Balance</CardTitle>
+              <CardTitle className="text-sm font-medium">Current Balance</CardTitle>
               <DollarSign className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
               {balanceLoading ? (
                 <Skeleton className="h-8 w-32" />
               ) : (
-                <div className="text-2xl font-bold">{formatINR(balance)}</div>
+                <div className="text-2xl font-bold text-primary">{formatINR(balance)}</div>
               )}
               <p className="text-xs text-muted-foreground mt-1">
                 Available funds for community support
@@ -86,9 +90,9 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-primary/20 hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Donations</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Funds in Trust</CardTitle>
               <TrendingUp className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
@@ -103,9 +107,9 @@ export default function DashboardPage() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="border-primary/20 hover:shadow-lg transition-shadow">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Spending</CardTitle>
+              <CardTitle className="text-sm font-medium">Total Amount Used</CardTitle>
               <TrendingDown className="h-4 w-4 text-muted-foreground" />
             </CardHeader>
             <CardContent>
