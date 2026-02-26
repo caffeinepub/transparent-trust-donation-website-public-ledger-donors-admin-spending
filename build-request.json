@@ -1,0 +1,40 @@
+{
+  "kind": "build_request",
+  "title": "Add Google Site Verification Meta Tag",
+  "priority": "normal",
+  "requirements": [
+    {
+      "id": "REQ-1",
+      "text": "Add the Google site verification meta tag '<meta name=\"google-site-verification\" content=\"BDqzMIYR_Iw59Cw7LJqSVoMEfTtuBlNF0hxcBC7095w\" />' to the <head> section of frontend/index.html, positioning it before the first <body> section",
+      "target": "frontend",
+      "source": {
+        "messageIds": [
+          "msg-last"
+        ],
+        "quotes": [
+          "paste it into your site's home page. It should go in the <head> section, before the first <body> section :  <meta name=\"google-site-verification\" content=\"BDqzMIYR_Iw59Cw7LJqSVoMEfTtuBlNF0hxcBC7095w\" />"
+        ]
+      },
+      "acceptanceCriteria": [
+        "The Google site verification meta tag is present in frontend/index.html",
+        "The meta tag is placed within the <head> section",
+        "The meta tag appears before the opening <body> tag",
+        "The verification content value matches exactly: BDqzMIYR_Iw59Cw7LJqSVoMEfTtuBlNF0hxcBC7095w"
+      ]
+    }
+  ],
+  "constraints": [
+    "Do not modify any existing meta tags or head content",
+    "Preserve all existing SEO meta tags and Open Graph tags",
+    "Maintain the exact verification content string provided by the user"
+  ],
+  "nonGoals": [
+    "Modifying any other HTML files beyond index.html",
+    "Adding additional Google verification methods",
+    "Changing existing Search Console configuration"
+  ],
+  "imageRequirements": {
+    "required": [],
+    "edits": []
+  }
+}

@@ -1,0 +1,29 @@
+{
+  "schemaVersion": "1.0.0",
+  "projectStateVersion": 3,
+  "summary": "New project",
+  "architectural_notes": [],
+  "known_issues": [],
+  "isFixRequest": false,
+  "existing_features": [
+    {
+      "id": "feature-add-the-google-site-verification-meta-tag-meta-name-google-site-verification-content-bdqzmiyr-iw59cw7ljqsvomefttublnf0hxcbc7095w-to-the-head-section-of-frontend-index-html-positioning-it-before-the-first-body-section",
+      "title": "Add the Google site verification meta tag '<meta name=\"google-site-verification\" content=\"BDqzMIYR_Iw59Cw7LJqSVoMEfTtuBlNF0hxcBC7095w\" />' to the <head> section of frontend/index.html, positioning it before the first <body> section",
+      "reqIds": [
+        "REQ-1"
+      ],
+      "version": 1
+    }
+  ],
+  "new_feature_requests": [
+    {
+      "id": "AR-1",
+      "summary": "Add Google site verification meta tag to home page head section",
+      "reqIds": [],
+      "status": "pending"
+    }
+  ],
+  "projectName": "Add Google Site Verification Meta Tag",
+  "clarification_mode": "instant",
+  "clarification_rounds": 0
+}
